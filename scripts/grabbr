@@ -1,0 +1,96 @@
+#!/usr/bin/python
+
+import os
+import sys
+import copy
+import yaml
+import psutil
+from termcolor import colored
+import grabbr
+import grabbr.db
+import grabbr.tools
+
+config = {
+    'pid_file': '/var/run/grabbr/pid',
+    'module_dir': '/srv/grabbr-plugins',
+    'force': False,
+    'random_sleep': False,
+    'headers': {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11',
+    },
+}
+if not os.path.exists(config['pid_file']):
+    already_running = False
+    with open(config['pid_file'], 'w') as pfh:
+        pfh.write(str(os.getpid()))
+    pfh.close()
+else:
+    already_running = True
+
+with open('/etc/grabbr/grabbr', 'r') as ifh:
+    config.update(yaml.safe_load(ifh.read()))
+
+if not os.path.exists(config['module_dir']):
+    os.makedirs(config['module_dir'])
+
+dbclient = grabbr.db.client(config)
+
+CLI_ARGS = [
+    '-f', '--force',
+    '-r', '--random-sleep',
+    '-l', '--list-queue',
+]
+
+urls = copy.copy(sys.argv[1:])
+
+if '--force' in urls or '-f' in urls:
+    config['force'] = True
+
+if '--random-sleep' in urls or '-r' in urls:
+    config['random_sleep'] = True
+
+if '--list-queue' in urls or '-l' in urls:
+    list_queue()
+
+modules = grabbr.loader(config, urls, dbclient)
+
+if not already_running:
+    while len(urls) > 0:
+        url = urls.pop(0)
+        if url in CLI_ARGS:
+            continue
+        filtered = False
+        for mod in modules:
+            if filtered is not None:
+                break
+            if not mod.endswith('.pre_check'):
+                continue
+            url_id, url, content = modules[mod](url_id, url, content)
+            filtered = True
+        if filtered is False:
+            url_id, content = grabbr.tools.get_url(
+                url, dbclient=dbclient, config=config
+            )
+        grabbr.tools.process_url(url_id, url, content, modules, config)
+        if len(urls) < 1:
+            grabbr.db.pop_dl_queue(dbclient, urls)
+        if os.path.exists('/var/run/grabbr/stop'):
+            print(colored('stop file found, exiting', 'yellow'))
+            os.remove('/var/run/grabbr/stop')
+            break
+    os.remove(config['pid_file'])
+else:
+    verified_running = False
+    for process in psutil.process_iter():
+        try:
+            if 'chromium' in process.cmdline()[0]:
+                continue
+            if 'python' in process.cmdline()[0] and 'grabbr' in process.cmdline()[1]:
+                if os.getpid() != process.pid:
+                    verified_running = True
+                    print(colored('grabbr already running, adding item(s) to the queue', 'yellow'))
+        except IndexError:
+            pass
+    if verified_running is False:
+        print(colored('grabbr not found in process list, check /var/run/grabbr/pid', 'red'))
+    grabbr.tools.queue_urls(urls, dbclient)
