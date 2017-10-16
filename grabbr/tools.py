@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import random
+import pprint
 import requests
 from termcolor import colored
 import psycopg2
@@ -23,7 +24,7 @@ def process_url(url_id, url, content, modules, config):
         if not mod.endswith('.func_map'):
             continue
         fun = modules[mod](url)
-    fun(url_id, url, content, config['force'])
+    fun(url_id, url, content)
 
 
 def get_url(
@@ -59,7 +60,7 @@ def get_url(
         print(colored(
             '{} has not been retrieved before, new ID is {}'.format(
                 url, url_id
-            ), 'green'
+            ), 'green',
         ))
     else:
         # URL has been retrieved, get its ID
@@ -94,6 +95,8 @@ def get_url(
         if referer:
             headers['referer'] = referer
         req = client.get(url, headers=headers)
+        if config.get('include_headers') is True:
+            pprint.pprint(req.headers)
         content = req.text
         cur.execute('''
                 INSERT INTO content
@@ -112,6 +115,8 @@ def get_url(
             if referer:
                 headers['referer'] = referer
             req = client.get(url, headers=headers)
+            if config.get('include_headers') is True:
+                pprint.pprint(req.headers)
             content = req.text
             cur.execute('''
                     UPDATE content
@@ -142,7 +147,7 @@ def status(req, media_url, file_name, sleep=0):
         cache_dir = '/'.join(file_name.split('/')[:-1])
         os.makedirs(cache_dir)
     except PermissionError as exc:
-        print(colored('Cannot create directory {}: {}'.format(cachedir, exc), 'red'))
+        print(colored('Cannot create directory {}: {}'.format(cachedir, exc), 'red', attrs=['bold']))
     except FileExistsError:
         pass
 
@@ -159,7 +164,7 @@ def status(req, media_url, file_name, sleep=0):
         point = int(total / 100)
         increment = int(total / buffer_size)
     except ZeroDivisionError:
-        print(colored('Divide by zero error, status not available', 'red'))
+        print(colored('Divide by zero error, status not available', 'red', attrs=['bold']))
         point = 0
         increment = 0
     start_time = time.time()
@@ -273,6 +278,8 @@ def queue_urls(links, dbclient):
     Check the database for any queued URLS, and add to the list
     '''
     cur = dbclient.cursor()
+    if isinstance(links, str):
+        links = [links]
     for url in links:
         try:
             cur.execute('INSERT INTO dl_queue (url) VALUES (%s)', [url])
