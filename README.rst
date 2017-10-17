@@ -106,4 +106,4 @@ from the ``grabbr.tools`` module:
 .. code-block:: python
 
     import grabbr.tools
-    grabbr.tools.queue_urls(new_urls, __dbclient__)
+    grabbr.tools.queue_urls(new_urls, __dbclient__, __config__)
