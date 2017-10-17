@@ -16,7 +16,8 @@ config = {
     'force': False,
     'random_sleep': False,
     'headers': {
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11',
+        'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 '
+                       '(KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11'),
     },
 }
 config['already_running'] = True
@@ -112,4 +113,4 @@ else:
             pass
     if verified_running is False:
         print(colored('grabbr not found in process list, check /var/run/grabbr/pid', 'red', attrs=['bold']))
-    grabbr.tools.queue_urls(urls, dbclient)
+    grabbr.tools.queue_urls(urls, dbclient, config)

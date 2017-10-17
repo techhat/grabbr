@@ -273,7 +273,7 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
         dbclient.commit()
 
 
-def queue_urls(links, dbclient):
+def queue_urls(links, dbclient, config):
     '''
     Check the database for any queued URLS, and add to the list
     '''
@@ -281,6 +281,16 @@ def queue_urls(links, dbclient):
     if isinstance(links, str):
         links = [links]
     for url in links:
+        if config.get('force') is not True:
+            # Check for URL in DB
+            cur.execute('''
+                SELECT id
+                FROM urls
+                WHERE url = %s
+            ''', [url])
+            if cur.rowcount > 0:
+                continue
+
         try:
             cur.execute('INSERT INTO dl_queue (url) VALUES (%s)', [url])
             dbclient.commit()
