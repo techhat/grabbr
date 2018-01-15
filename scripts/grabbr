@@ -1,5 +1,7 @@
 #!/usr/bin/python
+'''
+Run grabbr
+'''
+import grabbr  # pylint: disable=import-self
 
-import grabbr
-
-grabbr.run()
+grabbr.run()  # pylint: disable=c-extension-no-member
