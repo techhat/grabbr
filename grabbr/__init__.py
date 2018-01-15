@@ -17,28 +17,20 @@ import grabbr.db
 import grabbr.tools
 import grabbr.config
 
-CLI_ARGS = [
-    '-f', '--force',
-    '-r', '--random-sleep',
-    '-l', '--list-queue',
-    '-s', '--single',
-    '-i', '--include',
-    '-v', '--verbose',
-]
 
-
-def loader(config, urls, dbclient):
+def loader(opts, urls, dbclient):
     '''
     Load spider modules
     '''
     minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
-        [config['module_dir']],
+        [opts['module_dir']],
         minion_opts,
         tag=u'grabbr',
         pack={
-            u'__opts__': minion_opts,
-            u'__config__': config,
+            #u'__master_opts__': master_opts,
+            u'__minion_opts__': minion_opts,
+            u'__opts__': opts,
             u'__urls__': urls,
             u'__dbclient__': dbclient,
         },
@@ -49,28 +41,26 @@ def run():
     '''
     Run the program
     '''
-    config, urls = grabbr.config.load()
+    opts, urls = grabbr.config.load()
 
-    dbclient = grabbr.db.client(config)
+    dbclient = grabbr.db.client(opts)
 
-    if '--list-queue' in urls or '-l' in urls:
-        grabbr.db.list_queue(dbclient, config)
+    if opts.get('list_queue', False) is True:
+        grabbr.db.list_queue(dbclient, opts)
 
     # Write pid file
-    if not os.path.exists(config['pid_file']):
-        config['already_running'] = False
-        with open(config['pid_file'], 'w') as pfh:
+    if not os.path.exists(opts['pid_file']):
+        opts['already_running'] = False
+        with open(opts['pid_file'], 'w') as pfh:
             pfh.write(str(os.getpid()))
         pfh.close()
 
-    modules = grabbr.loader(config, urls, dbclient)
+    modules = grabbr.loader(opts, urls, dbclient)
 
-    if not config['already_running'] or config.get('single') is True:
+    if not opts['already_running'] or opts.get('single') is True:
         while len(urls) > 0:
             url_id = None
             url = urls.pop(0)
-            if url in CLI_ARGS:
-                continue
             for mod in modules:
                 if isinstance(url_id, int) and url_id == 0:
                     break
@@ -79,19 +69,19 @@ def run():
                 url_id, url, content = modules[mod](url)
             if url_id is None:
                 url_id, content = grabbr.tools.get_url(
-                    url, dbclient=dbclient, config=config
+                    url, dbclient=dbclient, opts=opts
                 )
-            grabbr.tools.process_url(url_id, url, content, modules, config)
+            grabbr.tools.process_url(url_id, url, content, modules, opts)
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls)
             if os.path.exists('/var/run/grabbr/stop'):
                 print(colored('stop file found, exiting', 'yellow', attrs=['bold']))
                 os.remove('/var/run/grabbr/stop')
                 break
-            if config.get('single') is True:
+            if opts.get('single') is True:
                 break
         try:
-            os.remove(config['pid_file'])
+            os.remove(opts['pid_file'])
         except FileNotFoundError:
             pass
     else:
@@ -114,4 +104,4 @@ def run():
                 pass
         if verified_running is False:
             print(colored('grabbr not found in process list, check /var/run/grabbr/pid', 'red', attrs=['bold']))
-        grabbr.tools.queue_urls(urls, dbclient, config)
+        grabbr.tools.queue_urls(urls, dbclient, opts)

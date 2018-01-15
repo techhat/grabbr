@@ -13,7 +13,7 @@ import psycopg2
 from psycopg2.extras import Json
 
 
-def process_url(url_id, url, content, modules, config):
+def process_url(url_id, url, content, modules, opts):
     '''
     Process a URL
     '''
@@ -33,7 +33,7 @@ def get_url(
         referer=None,
         dbclient=None,
         client=requests,
-        config=None,
+        opts=None,
     ):
     '''
     Download a URL (if necessary) and store it
@@ -91,12 +91,12 @@ def get_url(
         LIMIT 1
     ''', [url_id])
     if cur.rowcount < 1:
-        headers = config['headers'].copy()
+        headers = opts['headers'].copy()
         if referer:
             headers['referer'] = referer
         req = client.get(url, headers=headers)
-        if config.get('include_headers') is True:
-            pprint.pprint(req.headers)
+        if opts.get('include_headers') is True:
+            print(colored(pprint.pformat(dict(req.headers)) , 'cyan'))
         content = req.text
         cur.execute('''
                 INSERT INTO content
@@ -109,14 +109,14 @@ def get_url(
         )
         dbclient.commit()
     else:
-        if config['force'] is True:
+        if opts['force'] is True:
             row_id = cur.fetchone()[1]
-            headers = config['headers'].copy()
+            headers = opts['headers'].copy()
             if referer:
                 headers['referer'] = referer
             req = client.get(url, headers=headers)
-            if config.get('include_headers') is True:
-                pprint.pprint(req.headers)
+            if opts.get('include_headers') is True:
+                print(colored(pprint.pformat(dict(req.headers)) , 'cyan'))
             content = req.text
             cur.execute('''
                     UPDATE content
@@ -134,7 +134,7 @@ def get_url(
             content = cur.fetchone()[0]['content']
 
     if exists is False:
-        if config['random_sleep'] is True:
+        if opts['random_sleep'] is True:
             time.sleep(random.randrange(1, 10))
     return url_id, content
 
@@ -273,7 +273,7 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
         dbclient.commit()
 
 
-def queue_urls(links, dbclient, config):
+def queue_urls(links, dbclient, opts):
     '''
     Check the database for any queued URLS, and add to the list
     '''
@@ -281,7 +281,7 @@ def queue_urls(links, dbclient, config):
     if isinstance(links, str):
         links = [links]
     for url in links:
-        if config.get('force') is not True:
+        if opts.get('force') is not True:
             # Check for URL in DB
             cur.execute('''
                 SELECT id

@@ -39,7 +39,7 @@ def pop_dl_queue(dbclient, urls):
         dbclient.commit()
 
 
-def list_queue(dbclient, config):
+def list_queue(dbclient, opts):
     '''
     List all queued URLs in the database
     '''
@@ -49,6 +49,6 @@ def list_queue(dbclient, config):
         for row in cur.fetchall():
             print(colored('{}'.format(row[0]), 'green', attrs=['bold']))
     print(colored('{} URLS queued'.format(cur.rowcount), 'green', attrs=['bold']))
-    if not config.get('already_running'):
-        os.remove(config['pid_file'])
+    if not opts.get('already_running'):
+        os.remove(opts['pid_file'])
     sys.exit(0)

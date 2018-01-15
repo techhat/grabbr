@@ -2,19 +2,21 @@
 '''
 Config for Grabbr
 '''
+# Python
 import os
 import sys
 import copy
+import argparse
+
+# 3rd party
 import yaml
-from salt.loader import LazyLoader
-import salt.config
 
 
 def load():
     '''
     Load configuration
     '''
-    config = {
+    opts = {
         'pid_file': '/var/run/grabbr/pid',
         'module_dir': '/srv/grabbr-plugins',
         'force': False,
@@ -27,26 +29,60 @@ def load():
     }
 
     with open('/etc/grabbr/grabbr', 'r') as ifh:
-        config.update(yaml.safe_load(ifh.read()))
+        opts.update(yaml.safe_load(ifh.read()))
 
-    if not os.path.exists(config['module_dir']):
-        os.makedirs(config['module_dir'])
+    if not os.path.exists(opts['module_dir']):
+        os.makedirs(opts['module_dir'])
 
-    urls = copy.copy(sys.argv[1:])
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-f', '--force',
+        dest='force',
+        action='store_true',
+        default=False,
+        help='Force grabbr to re-download the URL(s)',
+    )
+    parser.add_argument(
+        '-r', '--random-sleep',
+        dest='random_sleep',
+        action='store_true',
+        default=False,
+        help='Random sleep (from 1 to 10 seconds) between requests',
+    )
+    parser.add_argument(
+        '-s', '--single',
+        dest='single',
+        action='store_true',
+        default=False,
+        help='Process a single URL, separate from any other current processes',
+    )
+    parser.add_argument(
+        '-i', '--include',
+        dest='include_headers',
+        action='store_true',
+        default=False,
+        help='Whether to display (pprint) the headers when requesting a URL',
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        dest='verbose',
+        action='store_true',
+        default=False,
+        help="Display more information about what's going on",
+    )
+    parser.add_argument(
+        '-l', '--list-queue',
+        dest='list_queue',
+        action='store_true',
+        default=False,
+        help="List the remaining URLS in the download queue",
+    )
+    parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
 
-    if '--force' in urls or '-f' in urls:
-        config['force'] = True
+    if len(sys.argv) < 2:
+        parser.print_help()
 
-    if '--random-sleep' in urls or '-r' in urls:
-        config['random_sleep'] = True
+    opts.update(parser.parse_args().__dict__)
+    urls = opts['urls']
 
-    if '--single' in urls or '-s' in urls:
-        config['single'] = True
-
-    if '--include' in urls or '-i' in urls:
-        config['include_headers'] = True
-
-    if '--verbose' in urls or '-v' in urls:
-        config['verbose'] = True
-
-    return config, urls
+    return opts, urls
