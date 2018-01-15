@@ -57,6 +57,8 @@ def run():
         pfh.close()
 
     modules = grabbr.loader(opts, urls, dbclient)
+    if opts['reprocess']:
+        urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 
     if not opts['already_running'] or opts.get('single') is True:
         while urls:

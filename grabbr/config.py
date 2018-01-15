@@ -74,7 +74,15 @@ def load():
         dest='list_queue',
         action='store_true',
         default=False,
-        help="List the remaining URLS in the download queue",
+        help='List the remaining URLS in the download queue',
+    )
+    parser.add_argument(
+        '-p', '--reprocess',
+        dest='reprocess',
+        action='store',
+        default=None,
+        nargs='+',
+        help='Reprocess a URL using a postgresql-style regexp',
     )
     parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
 

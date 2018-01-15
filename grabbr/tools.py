@@ -304,3 +304,23 @@ def queue_urls(links, dbclient, opts):
         except psycopg2.IntegrityError:
             # This URL is already queued
             dbclient.rollback()
+
+
+def reprocess_urls(urls, patterns, dbclient=None):
+    '''
+    Reprocess the cached URLs which matches the pattern(s)
+    '''
+    if not urls:
+        urls = []
+
+    if isinstance(patterns, str):
+        patterns = [patterns]
+
+    cur = dbclient.cursor()
+    wheres = ['url~%s'] * len(patterns)
+    query = 'SELECT url FROM urls WHERE {}'.format(' OR '.join(wheres))
+    cur.execute(query, patterns)
+    for row in cur.fetchall():
+        urls.append(row[0])
+
+    return urls
