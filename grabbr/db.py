@@ -7,7 +7,6 @@ import sys
 from termcolor import colored
 import psycopg2
 import psycopg2.extras
-from psycopg2.extras import Json
 
 
 def client(config):

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-nested-blocks,too-many-branches
+
 '''
 Basic functions for Grabbr
 '''
@@ -12,7 +14,6 @@ from termcolor import colored
 from salt.loader import LazyLoader
 import salt.config
 
-import grabbr
 import grabbr.db
 import grabbr.tools
 import grabbr.config
@@ -58,7 +59,7 @@ def run():
     modules = grabbr.loader(opts, urls, dbclient)
 
     if not opts['already_running'] or opts.get('single') is True:
-        while len(urls) > 0:
+        while urls:
             url_id = None
             url = urls.pop(0)
             for mod in modules:
@@ -71,7 +72,7 @@ def run():
                 url_id, content = grabbr.tools.get_url(
                     url, dbclient=dbclient, opts=opts
                 )
-            grabbr.tools.process_url(url_id, url, content, modules, opts)
+            grabbr.tools.process_url(url_id, url, content, modules)
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls)
             if os.path.exists('/var/run/grabbr/stop'):
@@ -103,5 +104,9 @@ def run():
             except IndexError:
                 pass
         if verified_running is False:
-            print(colored('grabbr not found in process list, check /var/run/grabbr/pid', 'red', attrs=['bold']))
+            print(colored(
+                'grabbr not found in process list, check /var/run/grabbr/pid',
+                'red',
+                attrs=['bold'],
+            ))
         grabbr.tools.queue_urls(urls, dbclient, opts)

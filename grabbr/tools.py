@@ -13,7 +13,7 @@ import psycopg2
 from psycopg2.extras import Json
 
 
-def process_url(url_id, url, content, modules, opts):
+def process_url(url_id, url, content, modules):
     '''
     Process a URL
     '''
@@ -96,7 +96,7 @@ def get_url(
             headers['referer'] = referer
         req = client.get(url, headers=headers)
         if opts.get('include_headers') is True:
-            print(colored(pprint.pformat(dict(req.headers)) , 'cyan'))
+            print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
         content = req.text
         cur.execute('''
                 INSERT INTO content
@@ -116,7 +116,7 @@ def get_url(
                 headers['referer'] = referer
             req = client.get(url, headers=headers)
             if opts.get('include_headers') is True:
-                print(colored(pprint.pformat(dict(req.headers)) , 'cyan'))
+                print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
             content = req.text
             cur.execute('''
                     UPDATE content
@@ -143,11 +143,15 @@ def status(req, media_url, file_name, sleep=0):
     '''
     Show status of the download
     '''
+    cache_dir = '/'.join(file_name.split('/')[:-1])
     try:
-        cache_dir = '/'.join(file_name.split('/')[:-1])
         os.makedirs(cache_dir)
     except PermissionError as exc:
-        print(colored('Cannot create directory {}: {}'.format(cachedir, exc), 'red', attrs=['bold']))
+        print(colored(
+            'Cannot create directory {}: {}'.format(cache_dir, exc),
+            'red',
+            attrs=['bold'],
+        ))
     except FileExistsError:
         pass
 
@@ -162,23 +166,23 @@ def status(req, media_url, file_name, sleep=0):
     count = 0
     try:
         point = int(total / 100)
-        increment = int(total / buffer_size)
+        #increment = int(total / buffer_size)
     except ZeroDivisionError:
         print(colored('Divide by zero error, status not available', 'red', attrs=['bold']))
         point = 0
-        increment = 0
+        #increment = 0
     start_time = time.time()
     last_time = time.time()
     delay_blocks = 0
     delay_count = 0
     with open(file_name, 'wb') as fhp:
-        old_time = time.time()
+        #old_time = time.time()
         for block in req.iter_content(buffer_size):
             fhp.write(block)
             count += buffer_size
             delay_blocks += buffer_size
             delay_count += 1
-            old_time = time.time()
+            #old_time = time.time()
             time_delay = time.time() - last_time
             if time_delay >= float(1):
                 last_time = time.time()
@@ -218,6 +222,9 @@ def status(req, media_url, file_name, sleep=0):
 
 
 def sizeof_fmt(num, suffix='B'):
+    '''
+    Show human-readable sizes
+    '''
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s " % (num, unit, suffix)
