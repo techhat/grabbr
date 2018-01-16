@@ -19,7 +19,7 @@ def load():
         'pid_file': '/var/run/grabbr/pid',
         'module_dir': '/srv/grabbr-plugins',
         'force': False,
-        'random_sleep': False,
+        'random_wait': False,
         'headers': {
             'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 '
                            '(KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11'),
@@ -42,11 +42,19 @@ def load():
         help='Force grabbr to re-download the URL(s)',
     )
     parser.add_argument(
-        '-r', '--random-sleep',
-        dest='random_sleep',
+        '-w', '--wait',
+        dest='wait',
+        action='store',
+        default=0,
+        help='Amount of time to wait between requests',
+    )
+    parser.add_argument(
+        '--random-wait',
+        dest='random_wait',
         action='store_true',
         default=False,
-        help='Random sleep (from 1 to 10 seconds) between requests',
+        help='Random wait (default from 1 to 10 seconds) between requests',
+    )
     )
     parser.add_argument(
         '-s', '--single',

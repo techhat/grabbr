@@ -32,7 +32,7 @@ The following settings are also configurable:
     pid_file: /var/run/grabbr/pid
     module_dir: /srv/grabbr-plugins
     force: False
-    random_sleep: False
+    random_wait: False
     headers:
         User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11
 

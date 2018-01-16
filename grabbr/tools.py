@@ -134,12 +134,13 @@ def get_url(
             content = cur.fetchone()[0]['content']
 
     if exists is False:
-        if opts['random_sleep'] is True:
-            time.sleep(random.randrange(1, 10))
+        if opts['random_wait'] is True:
+            wait = opts.get('wait', 10)
+            time.sleep(random.randrange(1, wait))
     return url_id, content
 
 
-def status(req, media_url, file_name, sleep=0):
+def status(req, media_url, file_name, wait=0):
     '''
     Show status of the download
     '''
@@ -218,7 +219,7 @@ def status(req, media_url, file_name, sleep=0):
                 delay_blocks = 0
                 delay_count = 0
     print()
-    time.sleep(sleep)
+    time.sleep(wait)
 
 
 def sizeof_fmt(num, suffix='B'):
