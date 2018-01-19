@@ -20,10 +20,6 @@ def load():
         'module_dir': '/srv/grabbr-plugins',
         'force': False,
         'random_wait': False,
-        'headers': {
-            'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 '
-                           '(KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11'),
-        },
         'already_running': True,
     }
 
@@ -81,8 +77,13 @@ def load():
         '-i', '--input-file',
         dest='input_file',
         action='store',
-        default=False,
         help='A file containing a list of links to download',
+    )
+    parser.add_argument(
+        '-H', '--header',
+        dest='headers',
+        action='append',
+        help='A header line to be included with the request',
     )
     parser.add_argument(
         '-l', '--list-queue',
@@ -155,12 +156,25 @@ def load():
         default=False,
         help="Just download the URL; don't call any plugins to process it",
     )
+    parser.add_argument(
+        '--user-agent',
+        dest='user_agent',
+        action='store',
+        default=('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 '
+                 '(KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11'),
+        help="Just download the URL; don't call any plugins to process it",
+    )
     parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
 
     if len(sys.argv) < 2:
         parser.print_help()
 
     opts.update(parser.parse_args().__dict__)
+    if opts['headers'] is None:
+        opts['headers'] = []
+    if opts['user_agent']:
+        opts['headers'].append({'User-Agent': opts['user_agent']})
+
     urls = opts['urls']
 
     return opts, urls

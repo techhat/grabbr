@@ -38,6 +38,15 @@ def get_url(
     '''
     Download a URL (if necessary) and store it
     '''
+    headers = []
+    if opts.get('headers'):
+        for header in opts['headers']:
+            headers.append({
+                header.split(':')[0]: ':'.join(header.split(':')[1:]).strip()
+            })
+    if referer:
+        headers['referer'] = referer
+
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
         req = client.get(url, headers=headers)
@@ -102,9 +111,6 @@ def get_url(
         LIMIT 1
     ''', [url_id])
     if cur.rowcount < 1:
-        headers = opts['headers'].copy()
-        if referer:
-            headers['referer'] = referer
         req = client.get(url, headers=headers)
         if opts.get('include_headers') is True:
             print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
@@ -122,9 +128,6 @@ def get_url(
     else:
         if opts['force'] is True:
             row_id = cur.fetchone()[1]
-            headers = opts['headers'].copy()
-            if referer:
-                headers['referer'] = referer
             req = client.get(url, headers=headers)
             if opts.get('include_headers') is True:
                 print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
