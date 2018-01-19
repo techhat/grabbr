@@ -77,9 +77,12 @@ def run():
 
     if not opts['already_running'] or opts.get('single') is True:
         level = 0
+        # Use a while instead of for, because the list is expected to expand
         while urls:
             url_id = None
             url = urls.pop(0)
+            if url.strip() == '':
+                continue
             for mod in modules:
                 if isinstance(url_id, int) and url_id == 0:
                     break

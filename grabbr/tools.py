@@ -38,12 +38,8 @@ def get_url(
     '''
     Download a URL (if necessary) and store it
     '''
-    headers = []
-    if opts.get('headers'):
-        for header in opts['headers']:
-            headers.append({
-                header.split(':')[0]: ':'.join(header.split(':')[1:]).strip()
-            })
+    headers = opts['headers'].copy()
+
     if referer:
         headers['referer'] = referer
 

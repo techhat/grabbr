@@ -170,8 +170,19 @@ def load():
         parser.print_help()
 
     opts.update(parser.parse_args().__dict__)
+
     if opts['headers'] is None:
         opts['headers'] = []
+    headers = []
+    for header in opts['headers']:
+        if isinstance(header, dict):
+            headers.append(header)
+        else:
+            headers.append({
+                header.split(':')[0]: ':'.join(header.split(':')[1:]).strip()
+            })
+    opts['headers'] = headers
+
     if opts['user_agent']:
         opts['headers'].append({'User-Agent': opts['user_agent']})
 
