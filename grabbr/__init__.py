@@ -9,8 +9,10 @@ import sys
 import copy
 import yaml
 import psutil
+import urllib
 from termcolor import colored
 
+from bs4 import BeautifulSoup
 from salt.loader import LazyLoader
 import salt.config
 
@@ -61,6 +63,7 @@ def run():
         urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 
     if not opts['already_running'] or opts.get('single') is True:
+        level = 0
         while urls:
             url_id = None
             url = urls.pop(0)
@@ -74,6 +77,35 @@ def run():
                 url_id, content = grabbr.tools.get_url(
                     url, dbclient=dbclient, opts=opts
                 )
+            # Display the source of the URL content
+            if opts.get('source', False) is True:
+                print(colored(content, 'cyan'))
+            # Get ready to do some html parsing
+            soup = BeautifulSoup(content, 'html.parser')
+            # Generate absolute URLs for every link on the page
+            hrefs = []
+            url_comps = urllib.parse.urlparse(url)
+            for link in soup.find_all('a'):
+                if level > int(opts['level']):
+                    continue
+                href = urllib.parse.urljoin(url, link.get('href'))
+                link_comps = urllib.parse.urlparse(href)
+                if link.text.startswith('javascript'):
+                    continue
+                if int(opts.get('level', 0)) < 1:
+                    continue
+                if opts['span_hosts'] is not True:
+                    if not link_comps[1].startswith(url_comps[1].split(':')[0]):
+                        continue
+                hrefs.append(href.split('#')[0])
+            level += 1
+            # Render the page, and print it along with the links
+            if opts.get('render', False) is True:
+                print(colored(soup.get_text(), 'cyan'))
+            if opts.get('links', False) is True:
+                print(colored('\n'.join(hrefs) , 'cyan'))
+            if opts.get('dllinks', False) is True:
+                grabbr.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('no_plugins', False) is not True:
                 grabbr.tools.process_url(url_id, url, content, modules)
             if len(urls) < 1:

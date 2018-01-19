@@ -100,6 +100,48 @@ def load():
         help="Don't cache the target in the database",
     )
     parser.add_argument(
+        '--source',
+        dest='source',
+        action='store_true',
+        default=False,
+        help="Display the URL's source",
+    )
+    parser.add_argument(
+        '--render', '--dump',
+        dest='render',
+        action='store_true',
+        default=False,
+        help='Render the content',
+    )
+    parser.add_argument(
+        '--links',
+        dest='links',
+        action='store_true',
+        default=False,
+        help='Display by a list of the absolute URLs in the page',
+    )
+    parser.add_argument(
+        '--dl-links', '--download-links',
+        dest='dllinks',
+        action='store_true',
+        default=False,
+        help='Add the absolute URLs from the page to the download queue',
+    )
+    parser.add_argument(
+        '--level',
+        dest='level',
+        action='store',
+        default=0,
+        help='Specify recursion maximum depth level depth',
+    )
+    parser.add_argument(
+        '--span-hosts',
+        dest='span_hosts',
+        action='store_true',
+        default=False,
+        help='Enable spanning across hosts when doing recursive retrieving',
+    )
+    parser.add_argument(
         '--no-plugins',
         dest='no_plugins',
         action='store_true',
