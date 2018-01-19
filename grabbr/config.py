@@ -93,6 +93,13 @@ def load():
         help='Reprocess a URL using a postgresql-style regexp',
     )
     parser.add_argument(
+        '--no-db-cache',
+        dest='no_db_cache',
+        action='store_true',
+        default=False,
+        help="Don't cache the target in the database",
+    )
+    parser.add_argument(
         '--no-plugins',
         dest='no_plugins',
         action='store_true',

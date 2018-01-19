@@ -38,6 +38,17 @@ def get_url(
     '''
     Download a URL (if necessary) and store it
     '''
+    if opts.get('no_db_cache') is True:
+        # Skip all the DB stuff and just download the URL
+        req = client.get(url, headers=headers)
+        if opts.get('include_headers') is True:
+            print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
+        content = req.text
+        if opts['random_wait'] is True:
+            wait = opts.get('wait', 10)
+            time.sleep(random.randrange(1, wait))
+        return 0, content
+
     cur = dbclient.cursor()
     exists = False
 
