@@ -74,7 +74,8 @@ def run():
                 url_id, content = grabbr.tools.get_url(
                     url, dbclient=dbclient, opts=opts
                 )
-            grabbr.tools.process_url(url_id, url, content, modules)
+            if opts.get('no_plugins', False) is not True:
+                grabbr.tools.process_url(url_id, url, content, modules)
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls)
             if os.path.exists('/var/run/grabbr/stop'):

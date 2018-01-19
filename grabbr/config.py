@@ -92,6 +92,13 @@ def load():
         nargs='+',
         help='Reprocess a URL using a postgresql-style regexp',
     )
+    parser.add_argument(
+        '--no-plugins',
+        dest='no_plugins',
+        action='store_true',
+        default=False,
+        help="Just download the URL; don't call any plugins to process it",
+    )
     parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
 
     if len(sys.argv) < 2:
