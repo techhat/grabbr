@@ -64,7 +64,7 @@ def load():
         help='Process a single URL, separate from any other current processes',
     )
     parser.add_argument(
-        '-i', '--include',
+        '-S', '--server-response',
         dest='include_headers',
         action='store_true',
         default=False,
@@ -76,6 +76,13 @@ def load():
         action='store_true',
         default=False,
         help="Display more information about what's going on",
+    )
+    parser.add_argument(
+        '-i', '--input-file',
+        dest='input_file',
+        action='store',
+        default=False,
+        help='A file containing a list of links to download',
     )
     parser.add_argument(
         '-l', '--list-queue',

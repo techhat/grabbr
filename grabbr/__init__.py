@@ -45,8 +45,21 @@ def run():
     Run the program
     '''
     opts, urls = grabbr.config.load()
-
     dbclient = grabbr.db.client(opts)
+
+    if opts.get('input_file'):
+        if opts['input_file'] == '-':
+            grabbr.tools.queue_urls(sys.stdin.readlines(), dbclient, opts)
+        else:
+            try:
+                with open(opts['input_file'], 'r') as ifh:
+                    links = ifh.read().splitlines()
+                grabbr.tools.queue_urls(links, dbclient, opts)
+            except OSError as exc:
+                print(colored(
+                    'There was an error reading {}: {}'.format(opts['input_file'], exc),
+                    'red',
+                ))
 
     if opts.get('list_queue', False) is True:
         grabbr.db.list_queue(dbclient, opts)
