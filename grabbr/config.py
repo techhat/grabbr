@@ -86,6 +86,13 @@ def load():
         help='A header line to be included with the request',
     )
     parser.add_argument(
+        '-d', '--data',
+        dest='data',
+        action='store',
+        default=None,
+        help='Data to be POSTed in the request',
+    )
+    parser.add_argument(
         '-l', '--list-queue',
         dest='list_queue',
         action='store_true',
@@ -185,6 +192,11 @@ def load():
 
     if opts['user_agent']:
         opts['headers'].append({'User-Agent': opts['user_agent']})
+
+    if opts.get('data'):
+        opts['method'] = 'POST'
+    else:
+        opts['method'] = 'GET'
 
     urls = opts['urls']
 

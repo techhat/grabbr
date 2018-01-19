@@ -39,13 +39,14 @@ def get_url(
     Download a URL (if necessary) and store it
     '''
     headers = opts['headers'].copy()
+    data = opts.get('data', None)
 
     if referer:
         headers['referer'] = referer
 
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
-        req = client.get(url, headers=headers)
+        req = client.request(opts['method'], url, headers=headers, data=data)
         if opts.get('include_headers') is True:
             print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
         content = req.text
@@ -107,7 +108,7 @@ def get_url(
         LIMIT 1
     ''', [url_id])
     if cur.rowcount < 1:
-        req = client.get(url, headers=headers)
+        req = client.request(opts['method'], url, headers=headers, data=data)
         if opts.get('include_headers') is True:
             print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
         content = req.text
@@ -124,7 +125,7 @@ def get_url(
     else:
         if opts['force'] is True:
             row_id = cur.fetchone()[1]
-            req = client.get(url, headers=headers)
+            req = client.request(opts['method'], url, headers=headers, data=data)
             if opts.get('include_headers') is True:
                 print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
             content = req.text
