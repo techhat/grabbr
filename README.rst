@@ -159,11 +159,11 @@ Consider the following block of code:
     import requests
     import grabbr.tools
     req = requests.get(url, stream=True)
-    grabbr.tools.status(req, url, file_name)
+    grabbr.tools.status(req, url, file_name, opts=__opts__)
 
 First, a ``requests`` object called ``req`` is set up, which ``stream`` set to
 ``True``. Please note that the ``status`` function requires this to be set.
 
-Then that object, along with the url and filename, is passed to ``status``,
-which will perform the download, while generating updates, as one might expect
-from a program like ``wget``.
+Then that object, along with the url, the filename, and the ``opts``, is passed
+to ``status``, which will perform the download, while generating updates, as
+one might expect from a program like ``wget``.
