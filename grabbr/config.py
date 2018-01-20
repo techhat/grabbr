@@ -51,12 +51,6 @@ def load():
         default=False,
         help='Random wait (default from 1 to 10 seconds) between requests',
     )
-    parser.add_argument(
-        '--limit-rate',
-        dest='limit_rate',
-        action='store',
-        default=0,
-        help='Throttle bandwidth to this value (k or m)',
     )
     parser.add_argument(
         '-s', '--single',
