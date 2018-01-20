@@ -180,18 +180,16 @@ def load():
 
     if opts['headers'] is None:
         opts['headers'] = []
-    headers = []
-    for header in opts['headers']:
+    headers = {}
+    for header in list(opts['headers']):
         if isinstance(header, dict):
-            headers.append(header)
+            headers[header] = opts['headers'][header]
         else:
-            headers.append({
-                header.split(':')[0]: ':'.join(header.split(':')[1:]).strip()
-            })
+            headers[header.split(':')[0]] = ':'.join(header.split(':')[1:]).strip()
     opts['headers'] = headers
 
     if opts['user_agent']:
-        opts['headers'].append({'User-Agent': opts['user_agent']})
+        opts['headers']['User-Agent'] = opts['user_agent']
 
     if opts.get('data'):
         opts['method'] = 'POST'
