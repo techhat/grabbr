@@ -151,10 +151,13 @@ def get_url(
     return url_id, content
 
 
-def status(req, media_url, file_name, wait=0):
+def status(req, media_url, file_name, wait=0, opts=None):
     '''
     Show status of the download
     '''
+    if opts is None:
+        opts = {}
+
     cache_dir = '/'.join(file_name.split('/')[:-1])
     try:
         os.makedirs(cache_dir)

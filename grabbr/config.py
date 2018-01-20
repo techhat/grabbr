@@ -51,7 +51,6 @@ def load():
         default=False,
         help='Random wait (default from 1 to 10 seconds) between requests',
     )
-    )
     parser.add_argument(
         '-s', '--single',
         dest='single',
