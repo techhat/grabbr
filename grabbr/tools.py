@@ -151,10 +151,13 @@ def get_url(
     return url_id, content
 
 
-def status(req, media_url, file_name, wait=0):
+def status(req, media_url, file_name, wait=0, opts=None):
     '''
     Show status of the download
     '''
+    if opts is None:
+        opts = {}
+
     cache_dir = '/'.join(file_name.split('/')[:-1])
     try:
         os.makedirs(cache_dir)
@@ -178,57 +181,54 @@ def status(req, media_url, file_name, wait=0):
     count = 0
     try:
         point = int(total / 100)
-        #increment = int(total / buffer_size)
     except ZeroDivisionError:
         print(colored('Divide by zero error, status not available', 'red', attrs=['bold']))
         point = 0
-        #increment = 0
     start_time = time.time()
     last_time = time.time()
-    delay_blocks = 0
     delay_count = 0
+    limit = int(opts.get('limit_rate', 0))
     with open(file_name, 'wb') as fhp:
-        #old_time = time.time()
         for block in req.iter_content(buffer_size):
             fhp.write(block)
             count += buffer_size
-            delay_blocks += buffer_size
             delay_count += 1
-            #old_time = time.time()
             time_delay = time.time() - last_time
-            if time_delay >= float(1):
-                last_time = time.time()
-                try:
-                    blocks_left = int((total - count) / buffer_size)
-                except ZeroDivisionError:
-                    blocks_left = 0
-                kbsec = (buffer_size / 1024) * delay_count
-                try:
-                    seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
-                except ZeroDivisionError:
-                    seconds_left = 0
-                minutes_left = int(seconds_left / 60)
-                minsecs_left = seconds_left % 60
-                time_left = '%d:%02d' % (minutes_left, minsecs_left)
-                seconds_elapsed = time.time() - start_time
-                seconds_total = seconds_elapsed + seconds_left
-                minutes_total = int(seconds_total / 60)
-                minsecs_total = int(seconds_total % 60)
-                time_total = '%d:%02d' % (minutes_total, minsecs_total)
-                try:
-                    percent = int(count / point)
-                except ZeroDivisionError:
-                    percent = 0
-                sys.stdout.write('\x1b[2K\r')
-                sys.stdout.write(colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
-                sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
-                sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
-                sys.stdout.write(colored(kbsec, 'cyan'))
-                sys.stdout.write(colored(' KiB/s, ', 'cyan'))
-                sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
-                sys.stdout.flush()
-                delay_blocks = 0
-                delay_count = 0
+            last_time = time.time()
+            try:
+                blocks_left = int((total - count) / buffer_size)
+            except ZeroDivisionError:
+                blocks_left = 0
+            kbsec = (buffer_size / 1024) * delay_count
+            try:
+                seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
+            except ZeroDivisionError:
+                seconds_left = 0
+            minutes_left = int(seconds_left / 60)
+            minsecs_left = seconds_left % 60
+            time_left = '%d:%02d' % (minutes_left, minsecs_left)
+            seconds_elapsed = time.time() - start_time
+            seconds_total = seconds_elapsed + seconds_left
+            minutes_total = int(seconds_total / 60)
+            minsecs_total = int(seconds_total % 60)
+            time_total = '%d:%02d' % (minutes_total, minsecs_total)
+            try:
+                percent = int(count / point)
+            except ZeroDivisionError:
+                percent = 0
+            sys.stdout.write('\x1b[2K\r')
+            sys.stdout.write(colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
+            sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
+            sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
+            sys.stdout.write(colored(int(kbsec), 'cyan'))
+            sys.stdout.write(colored(' KiB/s, ', 'cyan'))
+            sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
+            sys.stdout.flush()
+            # Rate limiting
+            if limit > 0:
+                if int(kbsec) >= limit and time_delay < float(1):
+                    time.sleep(float(1) - time_delay)
+                    delay_count = 0
     print()
     time.sleep(wait)
 
