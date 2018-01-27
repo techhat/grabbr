@@ -176,6 +176,26 @@ def load():
         help='When downloading (with --save-path), do NOT save HTML files',
     )
     parser.add_argument(
+        '--rename', '--rename-template',
+        dest='rename_template',
+        action='store',
+        help='A template to use for renaming downloads',
+    )
+    parser.add_argument(
+        '--rename-count-start',
+        dest='rename_count_start',
+        action='store',
+        default=0,
+        help='Number to start {count} at',
+    )
+    parser.add_argument(
+        '--rename-count-padding',
+        dest='rename_count_padding',
+        action='store',
+        default=0,
+        help='Zero-padding to be used for {count}',
+    )
+    parser.add_argument(
         '--level',
         dest='level',
         action='store',

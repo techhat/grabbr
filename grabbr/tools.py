@@ -189,6 +189,8 @@ def status(req, media_url, file_name, wait=0, opts=None):
     if opts is None:
         opts = {}
 
+    file_name = _rename(media_url, file_name, opts)
+
     cache_dir = '/'.join(file_name.split('/')[:-1])
     try:
         os.makedirs(cache_dir)
@@ -229,6 +231,7 @@ def status(req, media_url, file_name, wait=0, opts=None):
     last_time = time.time()
     delay_blocks = 0
     delay_count = 0
+
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
@@ -402,3 +405,45 @@ def queue_regexp(urls, pattern, dbclient, opts):
         if expr.search(url):
             links.append(url)
     queue_urls(links, dbclient, opts)
+
+
+def _rename(media_url, file_name, opts):
+    '''
+    When files are downloaded using status, rename as per a template
+    '''
+    template = opts.get('rename_template', '')
+    if not template:
+        return file_name
+
+    urlcomps = urllib.parse.urlparse(media_url)
+    print(urlcomps[2])
+    replacements = {
+        'host': urlcomps[1].split(':')[0],
+        'path': '/'.join(urlcomps[2].split('/')[:-2])
+    }
+
+    # File extensions
+    if '.' in urlcomps[2].split('/')[-1]:
+        replacements['ext'] = urlcomps[2].split('/')[-1].split('.')[-1]
+    else:
+        replacements['ext'] = ''
+
+    if not opts.get('rename_count'):
+        opts['rename_count'] = opts.get('rename_count_start', 0)
+
+    if opts.get('rename_count_padding'):
+        try:
+            opts['rename_count_padding'] = int(opts['rename_count_padding'])
+        except ValueError:
+            print(colored('--rename-count-padding must be an integer, using 0', 'red'))
+            opts['rename_count_padding'] = 0
+        template = template.replace('{count}', '{count:0>{rename_count_padding}}')
+        replacements['rename_count_padding'] = opts['rename_count_padding']
+    replacements['count'] = str(opts['rename_count'])
+    opts['rename_count'] += 1
+
+    file_name = os.path.join(opts['save_path'], template.format(**replacements))
+
+    print(file_name)
+
+    return file_name
