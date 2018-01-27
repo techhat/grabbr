@@ -108,7 +108,7 @@ def run():
                 link_comps = urllib.parse.urlparse(href)
                 if link.text.startswith('javascript'):
                     continue
-                if int(opts.get('level', 0)) < 1:
+                if int(opts.get('level', 0)) > 0 and int(opts.get('level', 0)) < 2:
                     continue
                 if opts['span_hosts'] is not True:
                     if not link_comps[1].startswith(url_comps[1].split(':')[0]):
