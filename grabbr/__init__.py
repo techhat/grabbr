@@ -96,28 +96,32 @@ def run():
             # Display the source of the URL content
             if opts.get('source', False) is True:
                 print(colored(content, 'cyan'))
-            # Get ready to do some html parsing
-            soup = BeautifulSoup(content, 'html.parser')
-            # Generate absolute URLs for every link on the page
             hrefs = []
-            url_comps = urllib.parse.urlparse(url)
-            for link in soup.find_all('a'):
-                if level > int(opts['level']):
-                    continue
-                href = urllib.parse.urljoin(url, link.get('href'))
-                link_comps = urllib.parse.urlparse(href)
-                if link.text.startswith('javascript'):
-                    continue
-                if int(opts.get('level', 0)) > 0 and int(opts.get('level', 0)) < 2:
-                    continue
-                if opts['span_hosts'] is not True:
-                    if not link_comps[1].startswith(url_comps[1].split(':')[0]):
+            try:
+                # Get ready to do some html parsing
+                soup = BeautifulSoup(content, 'html.parser')
+                # Generate absolute URLs for every link on the page
+                url_comps = urllib.parse.urlparse(url)
+                for link in soup.find_all('a'):
+                    if level > int(opts['level']):
                         continue
-                hrefs.append(href.split('#')[0])
+                    href = urllib.parse.urljoin(url, link.get('href'))
+                    link_comps = urllib.parse.urlparse(href)
+                    if link.text.startswith('javascript'):
+                        continue
+                    if int(opts.get('level', 0)) > 0 and int(opts.get('level', 0)) < 2:
+                        continue
+                    if opts['span_hosts'] is not True:
+                        if not link_comps[1].startswith(url_comps[1].split(':')[0]):
+                            continue
+                    hrefs.append(href.split('#')[0])
+                # Render the page, and print it along with the links
+                if opts.get('render', False) is True:
+                    print(colored(soup.get_text(), 'cyan'))
+            except TypeError:
+                # This URL probably isn't HTML
+                pass
             level += 1
-            # Render the page, and print it along with the links
-            if opts.get('render', False) is True:
-                print(colored(soup.get_text(), 'cyan'))
             if opts.get('links', False) is True:
                 print(colored('\n'.join(hrefs) , 'cyan'))
             if opts.get('queuelinks', False) is True:
@@ -127,6 +131,8 @@ def run():
                     grabbr.tools.process_url(url_id, url, content, modules)
                 except TypeError:
                     print(colored('No matching plugins were found', 'yellow'))
+            if opts.get('queue_re'):
+                grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls)
             if os.path.exists('/var/run/grabbr/stop'):

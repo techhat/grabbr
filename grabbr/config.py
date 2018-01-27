@@ -142,6 +142,40 @@ def load():
         help='Add the absolute URLs from the page to the download queue',
     )
     parser.add_argument(
+        '--queue-re', '--queue-regex', '--queue-regexp',
+        dest='queue_re',
+        action='store',
+        default=None,
+        help='Add the absolute URLs matching the regexp to the download queue',
+    )
+    parser.add_argument(
+        '-x', '--force-directories',
+        dest='force_directories',
+        action='store_true',
+        default=False,
+        help='When downloading, force a directory structure',
+    )
+    parser.add_argument(
+        '--save-path',
+        dest='save_path',
+        action='store',
+        default=None,
+        help='When downloading, use this path as the download root',
+    )
+    parser.add_argument(
+        '--save-html',
+        dest='save_html',
+        action='store_true',
+        default=True,
+        help='When downloading, save HTML as well as binary files',
+    )
+    parser.add_argument(
+        '--no-save-html',
+        dest='save_html',
+        action='store_false',
+        help='When downloading (with --save-path), do NOT save HTML files',
+    )
+    parser.add_argument(
         '--level',
         dest='level',
         action='store',

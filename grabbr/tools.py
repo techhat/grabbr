@@ -3,10 +3,12 @@
 Tools for Grabbr
 '''
 import os
+import re
 import sys
 import time
 import random
 import pprint
+import urllib
 import requests
 from termcolor import colored
 import psycopg2
@@ -44,6 +46,7 @@ def get_url(
     if referer:
         headers['referer'] = referer
 
+    wait = 0
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
         req = client.request(opts['method'], url, headers=headers, data=data)
@@ -99,6 +102,9 @@ def get_url(
             # This relationship already exists
             dbclient.rollback()
 
+    if opts['force_directories'] and not opts['save_path']:
+        opts['save_path'] = '.'
+
     # Check for content
     cur.execute('''
         SELECT data, id
@@ -108,39 +114,51 @@ def get_url(
         LIMIT 1
     ''', [url_id])
     if cur.rowcount < 1:
-        req = client.request(opts['method'], url, headers=headers, data=data)
-        if opts.get('include_headers') is True:
-            print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
-        content = req.text
-        cur.execute('''
-                INSERT INTO content
-                (url_id, data) VALUES (%s, %s)
-            ''',
-            [
-                url_id,
-                Json({'content': content})
-            ]
-        )
-        dbclient.commit()
-    else:
-        if opts['force'] is True:
-            row_id = cur.fetchone()[1]
+        if opts['save_path']:
+            req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
+            content, req_headers = _save_path(url, req, wait, opts)
+        else:
             req = client.request(opts['method'], url, headers=headers, data=data)
-            if opts.get('include_headers') is True:
-                print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
             content = req.text
+            req_headers = req.headers
+        if opts.get('include_headers') is True:
+            print(colored(pprint.pformat(dict(req_headers)), 'cyan'))
+        if content:
             cur.execute('''
-                    UPDATE content
-                    SET url_id = %s, data = %s
-                    WHERE id = %s
+                    INSERT INTO content
+                    (url_id, data) VALUES (%s, %s)
                 ''',
                 [
                     url_id,
-                    Json({'content': content}),
-                    row_id
+                    Json({'content': content})
                 ]
             )
             dbclient.commit()
+    else:
+        if opts['force'] is True:
+            row_id = cur.fetchone()[1]
+            if opts['save_path']:
+                req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
+                content, req_headers = _save_path(url, req, wait, opts)
+            else:
+                req = client.request(opts['method'], url, headers=headers, data=data)
+                content = req.text
+                req_headers = req.headers
+            if opts.get('include_headers') is True:
+                print(colored(pprint.pformat(dict(req_headers)), 'cyan'))
+            if content:
+                cur.execute('''
+                        UPDATE content
+                        SET url_id = %s, data = %s
+                        WHERE id = %s
+                    ''',
+                    [
+                        url_id,
+                        Json({'content': content}),
+                        row_id
+                    ]
+                )
+                dbclient.commit()
         else:
             content = cur.fetchone()[0]['content']
 
@@ -149,6 +167,19 @@ def get_url(
             wait = opts.get('wait', 10)
             time.sleep(random.randrange(1, wait))
     return url_id, content
+
+
+def _save_path(url, req, wait, opts):
+    '''
+    Save the URL to a path
+    '''
+    urlcomps = urllib.parse.urlparse(url)
+    if opts['force_directories']:
+        newpath = urlcomps[2].lstrip('/')
+        file_name = os.path.join(opts['save_path'], urlcomps[1], newpath)
+    else:
+        file_name = os.path.join(opts['save_path'], urlcomps[2].split('/')[-1])
+    return status(req, url, file_name, wait, opts)
 
 
 def status(req, media_url, file_name, wait=0, opts=None):
@@ -170,10 +201,18 @@ def status(req, media_url, file_name, wait=0, opts=None):
     except FileExistsError:
         pass
 
+    is_text = False
+    req_headers = req.headers
+    for header in list(req_headers):
+        if header.lower().startswith('content-type'):
+            if req_headers[header].startswith('text'):
+                is_text = True
+    content = ''
+
     print(colored('Downloading: {}'.format(media_url), 'green'))
     if os.path.exists(file_name):
         print(colored('... {} exists, skipping'.format(file_name), 'yellow'))
-        return
+        return None, {}
     sys.stdout.write(colored('...Saving to: ', 'green'))
     print(colored(file_name, 'cyan'))
     buffer_size = 4096
@@ -193,6 +232,8 @@ def status(req, media_url, file_name, wait=0, opts=None):
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
+            if is_text is True:
+                content += str(block)
             fhp.write(block)
             count += buffer_size
             delay_blocks += buffer_size
@@ -232,8 +273,17 @@ def status(req, media_url, file_name, wait=0, opts=None):
                 sys.stdout.flush()
                 delay_blocks = 0
                 delay_count = 0
+
+    if is_text is True and opts.get('save_html', True) is False:
+        os.remove(file_name)
+
+    if not content:
+        content = None
+
     print()
     time.sleep(wait)
+
+    return content, req_headers
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -339,3 +389,16 @@ def reprocess_urls(urls, patterns, dbclient=None):
         urls.append(row[0])
 
     return urls
+
+
+def queue_regexp(urls, pattern, dbclient, opts):
+    '''
+    Add the URLs matching the pattern to the download queue
+    '''
+    cur = dbclient.cursor()
+    expr = re.compile(pattern)
+    links = []
+    for url in urls:
+        if expr.search(url):
+            links.append(url)
+    queue_urls(links, dbclient, opts)
