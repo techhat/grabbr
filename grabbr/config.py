@@ -156,10 +156,16 @@ def load():
         help='Enable spanning across hosts when doing recursive retrieving',
     )
     parser.add_argument(
-        '--no-plugins',
-        dest='no_plugins',
+        '--use-plugins',
+        dest='use_plugins',
         action='store_true',
-        default=False,
+        default=True,
+        help="Just download the URL; don't call any plugins to process it",
+    )
+    parser.add_argument(
+        '--no-plugins',
+        dest='use_plugins',
+        action='store_false',
         help="Just download the URL; don't call any plugins to process it",
     )
     parser.add_argument(

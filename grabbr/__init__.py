@@ -122,7 +122,7 @@ def run():
                 print(colored('\n'.join(hrefs) , 'cyan'))
             if opts.get('dllinks', False) is True:
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
-            if opts.get('no_plugins', False) is not True:
+            if opts.get('use_plugins', True) is True:
                 try:
                     grabbr.tools.process_url(url_id, url, content, modules)
                 except TypeError:
