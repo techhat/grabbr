@@ -123,7 +123,10 @@ def run():
             if opts.get('dllinks', False) is True:
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('no_plugins', False) is not True:
-                grabbr.tools.process_url(url_id, url, content, modules)
+                try:
+                    grabbr.tools.process_url(url_id, url, content, modules)
+                except TypeError:
+                    print(colored('No matching plugins were found', 'yellow'))
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls)
             if os.path.exists('/var/run/grabbr/stop'):
