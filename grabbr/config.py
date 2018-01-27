@@ -135,8 +135,8 @@ def load():
         help='Display by a list of the absolute URLs in the page',
     )
     parser.add_argument(
-        '--dl-links', '--download-links',
-        dest='dllinks',
+        '--queue-links',
+        dest='queuelinks',
         action='store_true',
         default=False,
         help='Add the absolute URLs from the page to the download queue',

@@ -120,7 +120,7 @@ def run():
                 print(colored(soup.get_text(), 'cyan'))
             if opts.get('links', False) is True:
                 print(colored('\n'.join(hrefs) , 'cyan'))
-            if opts.get('dllinks', False) is True:
+            if opts.get('queuelinks', False) is True:
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('use_plugins', True) is True:
                 try:
