@@ -31,9 +31,17 @@ def pop_dl_queue(dbclient, urls):
     '''
     cur = dbclient.cursor()
     cur.execute('''
+        UPDATE dl_queue
+        SET paused_until = NULL
+        WHERE paused_until IS NOT NULL
+        AND paused_until <= NOW()
+    ''')
+    dbclient.commit()
+    cur.execute('''
         SELECT id, url
         FROM dl_queue
         WHERE paused = FALSE
+        AND paused_until IS NULL
         ORDER BY dl_order, id
         LIMIT 1
     ''')

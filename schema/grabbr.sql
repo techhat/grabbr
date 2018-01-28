@@ -11,6 +11,7 @@ CREATE TABLE dl_queue (
     url text
     dl_order integer NOT NULL default 1000000,
     paused boolean NOT NULL default FALSE,
+    paused_until timestamp,
 );
 
 CREATE TABLE referers (
