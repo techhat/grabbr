@@ -30,7 +30,13 @@ def pop_dl_queue(dbclient, urls):
     Check the database for any queued URLS, and add to the list
     '''
     cur = dbclient.cursor()
-    cur.execute('SELECT id, url FROM dl_queue ORDER BY dl_order, id LIMIT 1')
+    cur.execute('''
+        SELECT id, url
+        FROM dl_queue
+        WHERE paused = FALSE
+        ORDER BY dl_order, id
+        LIMIT 1
+    ''')
     if cur.rowcount > 0:
         data = cur.fetchone()
         urls.append(data[1])
