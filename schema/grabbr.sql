@@ -9,6 +9,7 @@ CREATE TABLE content (
 CREATE TABLE dl_queue (
     id serial primary key,
     url text
+    dl_order integer NOT NULL default 1000000,
 );
 
 CREATE TABLE referers (
