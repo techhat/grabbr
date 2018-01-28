@@ -102,10 +102,15 @@ def run():
                 soup = BeautifulSoup(content, 'html.parser')
                 # Generate absolute URLs for every link on the page
                 url_comps = urllib.parse.urlparse(url)
-                for link in soup.find_all('a'):
+                tags = soup.find_all('a')
+                if opts['search_src'] is True:
+                    tags = tags + soup.find_all(src=True)
+                for link in tags:
                     if level > int(opts['level']):
                         continue
                     href = urllib.parse.urljoin(url, link.get('href'))
+                    if opts['search_src'] is True and not link.get('href'):
+                        href = urllib.parse.urljoin(url, link.get('src'))
                     link_comps = urllib.parse.urlparse(href)
                     if link.text.startswith('javascript'):
                         continue

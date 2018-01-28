@@ -149,6 +149,13 @@ def load():
         help='Add the absolute URLs matching the regexp to the download queue',
     )
     parser.add_argument(
+        '--search-src',
+        dest='search_src',
+        action='store_true',
+        default=False,
+        help='Search tags with src attribute, in addition to hrefs',
+    )
+    parser.add_argument(
         '-x', '--force-directories',
         dest='force_directories',
         action='store_true',
