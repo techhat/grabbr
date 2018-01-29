@@ -100,6 +100,19 @@ def load(opts):
         help='Data to be POSTed in the request',
     )
     parser.add_argument(
+        '--use-queue',
+        dest='use_queue',
+        action='store_true',
+        default=True,
+        help="Process the items in the download queue (default)",
+    )
+    parser.add_argument(
+        '--no-queue',
+        dest='use_queue',
+        action='store_false',
+        help="Don't process any of the items in the download queue",
+    )
+    parser.add_argument(
         '--queue',
         dest='queue',
         action='store_true',
@@ -236,7 +249,7 @@ def load(opts):
         dest='use_plugins',
         action='store_true',
         default=True,
-        help="Just download the URL; don't call any plugins to process it",
+        help="Download the URL, using the plugins to process it (default)",
     )
     parser.add_argument(
         '--no-plugins',
@@ -253,9 +266,6 @@ def load(opts):
         help="Just download the URL; don't call any plugins to process it",
     )
     parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
-
-    if len(sys.argv) < 2:
-        parser.print_help()
 
     cli_opts = parser.parse_args().__dict__
 
@@ -291,4 +301,4 @@ def load(opts):
 
     urls = opts['urls']
 
-    return opts, urls
+    return opts, urls, parser

@@ -50,9 +50,9 @@ def run(run_opts=None):
     if run_opts is None:
         run_opts = {}
 
-    opts, urls = grabbr.config.load(run_opts)
-    dbclient = grabbr.db.client(opts)
+    opts, urls, parser = grabbr.config.load(run_opts)
     out = grabbr.tools.Output(opts)
+    dbclient = grabbr.db.client(opts)
 
     if opts.get('input_file'):
         if opts['input_file'] == '-':
@@ -70,6 +70,18 @@ def run(run_opts=None):
 
     if opts.get('queue', False) is True:
         out.info('Adding item(s) to the queue')
+        grabbr.tools.queue_urls(urls, dbclient, opts)
+        return
+
+    modules = grabbr.loader(opts, urls, dbclient)
+    if opts['reprocess']:
+        urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
+
+    if not urls and opts['use_queue'] is True:
+        grabbr.db.pop_dl_queue(dbclient, urls, opts)
+
+    if not urls:
+        parser.print_help()
         return
 
     # Write pid file
@@ -78,10 +90,6 @@ def run(run_opts=None):
         with open(opts['pid_file'], 'w') as pfh:
             pfh.write(str(os.getpid()))
         pfh.close()
-
-    modules = grabbr.loader(opts, urls, dbclient)
-    if opts['reprocess']:
-        urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 
     if not opts['already_running'] or opts.get('single') is True:
         level = 0
@@ -117,7 +125,7 @@ def run(run_opts=None):
                     out.warn('No matching plugins were found')
             if opts.get('queue_re'):
                 grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
-            if len(urls) < 1:
+            if len(urls) < 1 and opts['use_queue'] is True:
                 grabbr.db.pop_dl_queue(dbclient, urls, opts)
             if os.path.exists('/var/run/grabbr/stop'):
                 out.warn('stop file found, exiting')
