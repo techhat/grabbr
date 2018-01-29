@@ -68,6 +68,10 @@ def run(run_opts=None):
     if opts.get('list_queue', False) is True:
         grabbr.db.list_queue(dbclient, opts)
 
+    if opts.get('queue', False) is True:
+        out.info('Adding item(s) to the queue')
+        return
+
     # Write pid file
     if not os.path.exists(opts['pid_file']):
         opts['already_running'] = False

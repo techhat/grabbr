@@ -100,6 +100,13 @@ def load(opts):
         help='Data to be POSTed in the request',
     )
     parser.add_argument(
+        '--queue',
+        dest='queue',
+        action='store_true',
+        default=False,
+        help='Add the URLs to the download queue and exit',
+    )
+    parser.add_argument(
         '-l', '--list-queue',
         dest='list_queue',
         action='store_true',
