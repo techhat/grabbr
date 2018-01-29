@@ -2,10 +2,16 @@
 '''
 Database functions for Grabbr
 '''
+# Python
 import os
 import sys
+
+# 3rd party
 import psycopg2
 import psycopg2.extras
+
+# Internal
+import grabbr.tools
 
 
 def client(config):

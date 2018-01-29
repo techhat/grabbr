@@ -2,6 +2,7 @@
 '''
 Tools for Grabbr
 '''
+# Python
 import os
 import re
 import sys
@@ -9,6 +10,8 @@ import time
 import random
 import pprint
 import urllib
+
+# 3rd party
 import requests
 from termcolor import colored
 import psycopg2
@@ -245,7 +248,7 @@ def status(req, media_url, file_name, wait=0, opts=None):
 
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
-        out.warn('... {} exists, skipping'.format(file_name), 'yellow')
+        out.warn('... {} exists, skipping'.format(file_name))
         return None, {}
     sys.stdout.write(colored('...Saving to: ', 'green'))
     out.info(file_name)
@@ -430,7 +433,6 @@ def queue_regexp(urls, pattern, dbclient, opts):
     '''
     Add the URLs matching the pattern to the download queue
     '''
-    cur = dbclient.cursor()
     expr = re.compile(pattern)
     links = []
     for url in urls:

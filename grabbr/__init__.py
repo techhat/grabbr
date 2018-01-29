@@ -4,17 +4,20 @@
 '''
 Basic functions for Grabbr
 '''
+# Python
 import os
 import sys
 import copy
-import yaml
-import psutil
 import urllib
 
+# 3rd party
+import psutil
+import yaml
 from bs4 import BeautifulSoup
 from salt.loader import LazyLoader
 import salt.config
 
+# Internal
 import grabbr.db
 import grabbr.tools
 import grabbr.config
@@ -92,7 +95,7 @@ def run():
                 )
             # Display the source of the URL content
             if opts.get('source', False) is True:
-                out.info(content, 'cyan')
+                out.info(content)
             hrefs = grabbr.tools.parse_links(url, content, level, opts)
             level += 1
             if opts.get('links', False) is True:
