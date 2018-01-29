@@ -27,13 +27,14 @@ def loader(opts, urls, dbclient):
     '''
     Load spider modules
     '''
+    master_opts = {}
     minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
         opts['module_dir'],
         minion_opts,
         tag=u'grabbr',
         pack={
-            #u'__master_opts__': master_opts,
+            u'__master_opts__': master_opts,
             u'__minion_opts__': minion_opts,
             u'__opts__': opts,
             u'__urls__': urls,
@@ -42,11 +43,14 @@ def loader(opts, urls, dbclient):
     )
 
 
-def run():
+def run(run_opts=None):
     '''
     Run the program
     '''
-    opts, urls = grabbr.config.load()
+    if run_opts is None:
+        run_opts = {}
+
+    opts, urls = grabbr.config.load(run_opts)
     dbclient = grabbr.db.client(opts)
     out = grabbr.tools.Output(opts)
 

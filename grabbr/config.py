@@ -10,14 +10,12 @@ import argparse
 import yaml
 
 
-def load():
+def load(opts):
     '''
     Load configuration
     '''
-    opts = {
-        'already_running': True,
-        'module_dir': [],
-    }
+    opts['already_running'] = True
+    opts['module_dir'] = []
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
