@@ -13,6 +13,42 @@ import requests
 from termcolor import colored
 import psycopg2
 from psycopg2.extras import Json
+from bs4 import BeautifulSoup
+
+
+class Output(object):
+    '''
+    Used for outputting data
+    '''
+    def __init__(self, opts):
+        '''
+        Initialize
+        '''
+        self.opts = opts
+
+    def action(self, msg):
+        '''
+        Something is currently happening
+        '''
+        print(colored(msg, self.opts.get('action_color', 'green')))
+
+    def info(self, msg):
+        '''
+        Informational only
+        '''
+        print(colored(msg, self.opts.get('info_color', 'cyan')))
+
+    def warn(self, msg):
+        '''
+        warnrmational only
+        '''
+        print(colored(msg, self.opts.get('warn_color', 'yellow')))
+
+    def error(self, msg):
+        '''
+        errorrmational only
+        '''
+        print(colored(msg, self.opts.get('error_color', 'red', attrs=['bold'])))
 
 
 def process_url(url_id, url, content, modules):
@@ -40,6 +76,8 @@ def get_url(
     '''
     Download a URL (if necessary) and store it
     '''
+    out = Output(opts)
+
     headers = opts['headers'].copy()
     data = opts.get('data', None)
 
@@ -51,7 +89,7 @@ def get_url(
         # Skip all the DB stuff and just download the URL
         req = client.request(opts['method'], url, headers=headers, data=data)
         if opts.get('include_headers') is True:
-            print(colored(pprint.pformat(dict(req.headers)), 'cyan'))
+            out.info(pprint.pformat(dict(req.headers)))
         content = req.text
         if opts['random_wait'] is True:
             wait = opts.get('wait', 10)
@@ -77,15 +115,11 @@ def get_url(
         ''', [url])
         dbclient.commit()
         url_id = cur.fetchone()[0]
-        print(colored(
-            '{} has not been retrieved before, new ID is {}'.format(
-                url, url_id
-            ), 'green',
-        ))
+        out.action('{} has not been retrieved before, new ID is {}'.format(url, url_id))
     else:
         # URL has been retrieved, get its ID
         url_id = cur.fetchone()[0]
-        print(colored('{} exists, ID is {}'.format(url, url_id), 'yellow'))
+        out.warn('{} exists, ID is {}'.format(url, url_id))
         exists = True
 
     # Save referer relationships
@@ -122,7 +156,7 @@ def get_url(
             content = req.text
             req_headers = req.headers
         if opts.get('include_headers') is True:
-            print(colored(pprint.pformat(dict(req_headers)), 'cyan'))
+            out.info(pprint.pformat(dict(req_headers)))
         if content:
             cur.execute('''
                     INSERT INTO content
@@ -145,7 +179,7 @@ def get_url(
                 content = req.text
                 req_headers = req.headers
             if opts.get('include_headers') is True:
-                print(colored(pprint.pformat(dict(req_headers)), 'cyan'))
+                out.info(pprint.pformat(dict(req_headers)))
             if content:
                 cur.execute('''
                         UPDATE content
@@ -186,6 +220,8 @@ def status(req, media_url, file_name, wait=0, opts=None):
     '''
     Show status of the download
     '''
+    out = Output(opts)
+
     if opts is None:
         opts = {}
 
@@ -195,11 +231,7 @@ def status(req, media_url, file_name, wait=0, opts=None):
     try:
         os.makedirs(cache_dir)
     except PermissionError as exc:
-        print(colored(
-            'Cannot create directory {}: {}'.format(cache_dir, exc),
-            'red',
-            attrs=['bold'],
-        ))
+        out.error('Cannot create directory {}: {}'.format(cache_dir, exc))
     except FileExistsError:
         pass
 
@@ -211,12 +243,12 @@ def status(req, media_url, file_name, wait=0, opts=None):
                 is_text = True
     content = ''
 
-    print(colored('Downloading: {}'.format(media_url), 'green'))
+    out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
-        print(colored('... {} exists, skipping'.format(file_name), 'yellow'))
+        out.warn('... {} exists, skipping'.format(file_name), 'yellow')
         return None, {}
     sys.stdout.write(colored('...Saving to: ', 'green'))
-    print(colored(file_name, 'cyan'))
+    out.info(file_name)
     buffer_size = 4096
     total = int(req.headers.get('Content-Length', 0))
     count = 0
@@ -224,7 +256,7 @@ def status(req, media_url, file_name, wait=0, opts=None):
         point = int(total / 100)
         #increment = int(total / buffer_size)
     except ZeroDivisionError:
-        print(colored('Divide by zero error, status not available', 'red', attrs=['bold']))
+        out.error('Divide by zero error, status not available')
         point = 0
         #increment = 0
     start_time = time.time()
@@ -411,6 +443,8 @@ def _rename(media_url, file_name, opts):
     '''
     When files are downloaded using status, rename as per a template
     '''
+    out = Output(opts)
+
     template = opts.get('rename_template', '')
     if not template:
         return file_name
@@ -435,7 +469,7 @@ def _rename(media_url, file_name, opts):
         try:
             opts['rename_count_padding'] = int(opts['rename_count_padding'])
         except ValueError:
-            print(colored('--rename-count-padding must be an integer, using 0', 'red'))
+            out.warn('--rename-count-padding must be an integer, using 0')
             opts['rename_count_padding'] = 0
         template = template.replace('{count}', '{count:0>{rename_count_padding}}')
         replacements['rename_count_padding'] = opts['rename_count_padding']
@@ -447,3 +481,42 @@ def _rename(media_url, file_name, opts):
     print(file_name)
 
     return file_name
+
+
+def parse_links(url, content, level, opts):
+    '''
+    Return the links from an HTML page
+    '''
+    out = Output(opts)
+
+    hrefs = []
+    try:
+        # Get ready to do some html parsing
+        soup = BeautifulSoup(content, 'html.parser')
+        # Generate absolute URLs for every link on the page
+        url_comps = urllib.parse.urlparse(url)
+        tags = soup.find_all('a')
+        if opts['search_src'] is True:
+            tags = tags + soup.find_all(src=True)
+        for link in tags:
+            if level > int(opts['level']):
+                continue
+            href = urllib.parse.urljoin(url, link.get('href'))
+            if opts['search_src'] is True and not link.get('href'):
+                href = urllib.parse.urljoin(url, link.get('src'))
+            link_comps = urllib.parse.urlparse(href)
+            if link.text.startswith('javascript'):
+                continue
+            if int(opts.get('level', 0)) > 0 and int(opts.get('level', 0)) < 2:
+                continue
+            if opts['span_hosts'] is not True:
+                if not link_comps[1].startswith(url_comps[1].split(':')[0]):
+                    continue
+            hrefs.append(href.split('#')[0])
+        # Render the page, and print it along with the links
+        if opts.get('render', False) is True:
+            out.info(soup.get_text())
+        return hrefs
+    except TypeError:
+        # This URL probably isn't HTML
+        return []

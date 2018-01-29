@@ -4,7 +4,6 @@ Database functions for Grabbr
 '''
 import os
 import sys
-from termcolor import colored
 import psycopg2
 import psycopg2.extras
 
@@ -72,12 +71,14 @@ def list_queue(dbclient, opts):
     '''
     List all queued URLs in the database
     '''
+    out = grabbr.tools.Output(opts)
+
     cur = dbclient.cursor()
     cur.execute('SELECT url FROM dl_queue')
     if cur.rowcount > 0:
         for row in cur.fetchall():
-            print(colored('{}'.format(row[0]), 'green', attrs=['bold']))
-    print(colored('{} URLS queued'.format(cur.rowcount), 'green', attrs=['bold']))
+            out.info('{}'.format(row[0]))
+    out.info('{} URLS queued'.format(cur.rowcount))
     if not opts.get('already_running'):
         os.remove(opts['pid_file'])
     sys.exit(0)

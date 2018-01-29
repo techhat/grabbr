@@ -10,7 +10,6 @@ import copy
 import yaml
 import psutil
 import urllib
-from termcolor import colored
 
 from bs4 import BeautifulSoup
 from salt.loader import LazyLoader
@@ -46,6 +45,7 @@ def run():
     '''
     opts, urls = grabbr.config.load()
     dbclient = grabbr.db.client(opts)
+    out = grabbr.tools.Output(opts)
 
     if opts.get('input_file'):
         if opts['input_file'] == '-':
@@ -56,10 +56,7 @@ def run():
                     links = ifh.read().splitlines()
                 grabbr.tools.queue_urls(links, dbclient, opts)
             except OSError as exc:
-                print(colored(
-                    'There was an error reading {}: {}'.format(opts['input_file'], exc),
-                    'red',
-                ))
+                out.error('There was an error reading {}: {}'.format(opts['input_file'], exc))
 
     if opts.get('list_queue', False) is True:
         grabbr.db.list_queue(dbclient, opts)
@@ -95,53 +92,24 @@ def run():
                 )
             # Display the source of the URL content
             if opts.get('source', False) is True:
-                print(colored(content, 'cyan'))
-            hrefs = []
-            try:
-                # Get ready to do some html parsing
-                soup = BeautifulSoup(content, 'html.parser')
-                # Generate absolute URLs for every link on the page
-                url_comps = urllib.parse.urlparse(url)
-                tags = soup.find_all('a')
-                if opts['search_src'] is True:
-                    tags = tags + soup.find_all(src=True)
-                for link in tags:
-                    if level > int(opts['level']):
-                        continue
-                    href = urllib.parse.urljoin(url, link.get('href'))
-                    if opts['search_src'] is True and not link.get('href'):
-                        href = urllib.parse.urljoin(url, link.get('src'))
-                    link_comps = urllib.parse.urlparse(href)
-                    if link.text.startswith('javascript'):
-                        continue
-                    if int(opts.get('level', 0)) > 0 and int(opts.get('level', 0)) < 2:
-                        continue
-                    if opts['span_hosts'] is not True:
-                        if not link_comps[1].startswith(url_comps[1].split(':')[0]):
-                            continue
-                    hrefs.append(href.split('#')[0])
-                # Render the page, and print it along with the links
-                if opts.get('render', False) is True:
-                    print(colored(soup.get_text(), 'cyan'))
-            except TypeError:
-                # This URL probably isn't HTML
-                pass
+                out.info(content, 'cyan')
+            hrefs = grabbr.tools.parse_links(url, content, level, opts)
             level += 1
             if opts.get('links', False) is True:
-                print(colored('\n'.join(hrefs) , 'cyan'))
+                out.info('\n'.join(hrefs))
             if opts.get('queuelinks', False) is True:
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('use_plugins', True) is True:
                 try:
                     grabbr.tools.process_url(url_id, url, content, modules)
                 except TypeError:
-                    print(colored('No matching plugins were found', 'yellow'))
+                    out.warn('No matching plugins were found')
             if opts.get('queue_re'):
                 grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
             if len(urls) < 1:
                 grabbr.db.pop_dl_queue(dbclient, urls, opts)
             if os.path.exists('/var/run/grabbr/stop'):
-                print(colored('stop file found, exiting', 'yellow', attrs=['bold']))
+                out.warn('stop file found, exiting')
                 os.remove('/var/run/grabbr/stop')
                 break
             if opts.get('single') is True:
@@ -161,17 +129,9 @@ def run():
                     if 'grabbr' in cmdline:
                         if os.getpid() != process.pid:
                             verified_running = True
-                            print(colored(
-                                'grabbr already running, adding item(s) to the queue',
-                                'yellow',
-                                attrs=['bold'],
-                            ))
+                            out.info('grabbr already running, adding item(s) to the queue')
             except IndexError:
                 pass
         if verified_running is False:
-            print(colored(
-                'grabbr not found in process list, check /var/run/grabbr/pid',
-                'red',
-                attrs=['bold'],
-            ))
+            out.error('grabbr not found in process list, check /var/run/grabbr/pid')
         grabbr.tools.queue_urls(urls, dbclient, opts)
