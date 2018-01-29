@@ -450,7 +450,6 @@ def _rename(media_url, file_name, opts):
         return file_name
 
     urlcomps = urllib.parse.urlparse(media_url)
-    print(urlcomps[2])
     replacements = {
         'host': urlcomps[1].split(':')[0],
         'path': '/'.join(urlcomps[2].split('/')[:-2])
@@ -477,8 +476,6 @@ def _rename(media_url, file_name, opts):
     opts['rename_count'] += 1
 
     file_name = os.path.join(opts['save_path'], template.format(**replacements))
-
-    print(file_name)
 
     return file_name
 
