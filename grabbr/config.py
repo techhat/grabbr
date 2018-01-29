@@ -16,20 +16,31 @@ def load():
     Load configuration
     '''
     opts = {
-        'pid_file': '/var/run/grabbr/pid',
-        'module_dir': '/srv/grabbr-plugins',
-        'force': False,
-        'random_wait': False,
         'already_running': True,
+        'module_dir': [],
     }
 
-    with open('/etc/grabbr/grabbr', 'r') as ifh:
-        opts.update(yaml.safe_load(ifh.read()))
-
-    if not os.path.exists(opts['module_dir']):
-        os.makedirs(opts['module_dir'])
-
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--config-file',
+        dest='config_file',
+        action='store',
+        default='/etc/grabbr/grabbr',
+        help='Default location for the config file',
+    )
+    parser.add_argument(
+        '--pid-file',
+        dest='pid_file',
+        action='store',
+        default='/var/run/grabbr/pid',
+        help='Default location for the PID file',
+    )
+    parser.add_argument(
+        '--module-dir',
+        dest='module_dir',
+        action='append',
+        help='Location for grabbr plugins',
+    )
     parser.add_argument(
         '-f', '--force',
         dest='force',
@@ -242,8 +253,20 @@ def load():
     if len(sys.argv) < 2:
         parser.print_help()
 
-    opts.update(parser.parse_args().__dict__)
+    cli_opts = parser.parse_args().__dict__
 
+    # Load in the config file
+    with open(cli_opts['config_file'], 'r') as ifh:
+        opts.update(yaml.safe_load(ifh.read()))
+
+    # Lay down CLI opts on top of config file opts
+    opts.update(cli_opts)
+
+    # module_dir is an array
+    if not opts['module_dir']:
+        opts['module_dir'] = ['/srv/grabbr-plugins']
+
+    # Set up any headers for the agent
     if opts['headers'] is None:
         opts['headers'] = []
     headers = {}

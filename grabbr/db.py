@@ -25,11 +25,13 @@ def client(config):
     return dbclient
 
 
-def pop_dl_queue(dbclient, urls):
+def pop_dl_queue(dbclient, urls, opts):
     '''
     Check the database for any queued URLS, and add to the list
     '''
     cur = dbclient.cursor()
+
+    # Unpause jobs past the time limit
     cur.execute('''
         UPDATE dl_queue
         SET paused_until = NULL
@@ -37,19 +39,33 @@ def pop_dl_queue(dbclient, urls):
         AND paused_until <= NOW()
     ''')
     dbclient.commit()
+
+    # Lock a URL for this instance
     cur.execute('''
-        SELECT id, url
-        FROM dl_queue
-        WHERE paused = FALSE
-        AND paused_until IS NULL
-        ORDER BY dl_order, id
-        LIMIT 1
-    ''')
+        UPDATE dl_queue
+        SET locked_by = %s
+        WHERE id = (
+            SELECT id
+            FROM dl_queue
+            WHERE paused = FALSE
+            AND paused_until IS NULL
+            ORDER BY dl_order, id
+            LIMIT 1
+        )
+        RETURNING id
+    ''', [opts.get('id', 'unknown')])
+    dbclient.commit()
     if cur.rowcount > 0:
         data = cur.fetchone()
-        urls.append(data[1])
-        cur.execute('DELETE FROM dl_queue WHERE id = %s', [data[0]])
-        dbclient.commit()
+        url_id = data[0]
+    else:
+        return
+
+    # Queue the URL and delete it from the queue
+    cur.execute('SELECT url FROM dl_queue WHERE id = %s', [url_id])
+    urls.append(cur.fetchone()[0])
+    cur.execute('DELETE FROM dl_queue WHERE id = %s', [url_id])
+    dbclient.commit()
 
 
 def list_queue(dbclient, opts):

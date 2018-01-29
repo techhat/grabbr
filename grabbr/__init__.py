@@ -27,7 +27,7 @@ def loader(opts, urls, dbclient):
     '''
     minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
-        [opts['module_dir']],
+        opts['module_dir'],
         minion_opts,
         tag=u'grabbr',
         pack={
@@ -139,7 +139,7 @@ def run():
             if opts.get('queue_re'):
                 grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
             if len(urls) < 1:
-                grabbr.db.pop_dl_queue(dbclient, urls)
+                grabbr.db.pop_dl_queue(dbclient, urls, opts)
             if os.path.exists('/var/run/grabbr/stop'):
                 print(colored('stop file found, exiting', 'yellow', attrs=['bold']))
                 os.remove('/var/run/grabbr/stop')
