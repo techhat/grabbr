@@ -3,7 +3,6 @@
 Config for Grabbr
 '''
 # Python
-import sys
 import argparse
 
 # 3rd party
