@@ -7,6 +7,7 @@ Basic functions for Grabbr
 # Python
 import os
 import sys
+import time
 import copy
 import urllib
 
@@ -43,6 +44,34 @@ def loader(opts, urls, dbclient):
     )
 
 
+def daemonize(opts):
+    '''
+    Spawn a new process
+    '''
+    out = grabbr.tools.Output(opts)
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit first parent
+            sys.exit(0)
+    except OSError as exc:
+        out.error('fork #1 failed: %s (%s)', exc.errno, exc)
+        sys.exit(1)
+
+    os.chdir('/')
+    os.setsid()
+    os.umask(0)
+
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError as exc:
+        out.error('fork #2 failed: %s (%s)', exc.errno, exc)
+        sys.exit(1)
+
+
 def run(run_opts=None):
     '''
     Run the program
@@ -51,6 +80,10 @@ def run(run_opts=None):
         run_opts = {}
 
     opts, urls, parser = grabbr.config.load(run_opts)
+
+    if opts['daemon']:
+        daemonize(opts)
+
     out = grabbr.tools.Output(opts)
     dbclient = grabbr.db.client(opts)
 
@@ -81,8 +114,9 @@ def run(run_opts=None):
         grabbr.db.pop_dl_queue(dbclient, urls, opts)
 
     if not urls:
-        parser.print_help()
-        return
+        if not opts['daemon']:
+            parser.print_help()
+            return
 
     # Write pid file
     if not os.path.exists(opts['pid_file']):
@@ -94,9 +128,22 @@ def run(run_opts=None):
     if not opts['already_running'] or opts.get('single') is True:
         level = 0
         # Use a while instead of for, because the list is expected to expand
-        while urls:
+        while True:
             url_id = None
-            url = urls.pop(0)
+            if os.path.exists('/var/run/grabbr/stop'):
+                out.warn('stop file found, exiting')
+                os.remove('/var/run/grabbr/stop')
+                break
+            if len(urls) < 1 and opts['use_queue'] is True:
+                grabbr.db.pop_dl_queue(dbclient, urls, opts)
+            try:
+                url = urls.pop(0)
+            except IndexError:
+                if opts['daemon']:
+                    time.sleep(.1)
+                    continue
+                else:
+                    break
             if url.strip() == '':
                 continue
             for mod in modules:
@@ -125,12 +172,6 @@ def run(run_opts=None):
                     out.warn('No matching plugins were found')
             if opts.get('queue_re'):
                 grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
-            if len(urls) < 1 and opts['use_queue'] is True:
-                grabbr.db.pop_dl_queue(dbclient, urls, opts)
-            if os.path.exists('/var/run/grabbr/stop'):
-                out.warn('stop file found, exiting')
-                os.remove('/var/run/grabbr/stop')
-                break
             if opts.get('single') is True:
                 break
         try:
@@ -148,9 +189,13 @@ def run(run_opts=None):
                     if 'grabbr' in cmdline:
                         if os.getpid() != process.pid:
                             verified_running = True
-                            out.info('grabbr already running, adding item(s) to the queue')
+                            if opts['daemon']:
+                                out.error('grabbr already running, or improperly stopped', force=True)
+                                sys.exit(1)
+                            else:
+                                out.info('grabbr already running, adding item(s) to the queue')
             except IndexError:
                 pass
         if verified_running is False:
-            out.error('grabbr not found in process list, check /var/run/grabbr/pid')
+            out.error('grabbr not found in process list, check /var/run/grabbr/pid', force=True)
         grabbr.tools.queue_urls(urls, dbclient, opts)

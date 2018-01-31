@@ -29,29 +29,33 @@ class Output(object):
         '''
         self.opts = opts
 
-    def action(self, msg):
+    def action(self, msg, force=False):
         '''
         Something is currently happening
         '''
-        print(colored(msg, self.opts.get('action_color', 'green')))
+        if not self.opts['daemon'] or force is True:
+            print(colored(msg, self.opts.get('action_color', 'green')))
 
-    def info(self, msg):
+    def info(self, msg, force=False):
         '''
         Informational only
         '''
-        print(colored(msg, self.opts.get('info_color', 'cyan')))
+        if not self.opts['daemon'] or force is True:
+            print(colored(msg, self.opts.get('info_color', 'cyan')))
 
-    def warn(self, msg):
+    def warn(self, msg, force=False):
         '''
         warnrmational only
         '''
-        print(colored(msg, self.opts.get('warn_color', 'yellow')))
+        if not self.opts['daemon'] or force is True:
+            print(colored(msg, self.opts.get('warn_color', 'yellow')))
 
-    def error(self, msg):
+    def error(self, msg, force=False):
         '''
         errorrmational only
         '''
-        print(colored(msg, self.opts.get('error_color', 'red', attrs=['bold'])))
+        if not self.opts['daemon'] or force is True:
+            print(colored(msg, self.opts.get('error_color', 'red'), attrs=['bold']))
 
 
 def process_url(url_id, url, content, modules):
@@ -250,7 +254,8 @@ def status(req, media_url, file_name, wait=0, opts=None):
     if os.path.exists(file_name):
         out.warn('... {} exists, skipping'.format(file_name))
         return None, {}
-    sys.stdout.write(colored('...Saving to: ', 'green'))
+    if not opts['daemon']:
+        sys.stdout.write(colored('...Saving to: ', 'green'))
     out.info(file_name)
     buffer_size = 4096
     total = int(req.headers.get('Content-Length', 0))
@@ -301,14 +306,15 @@ def status(req, media_url, file_name, wait=0, opts=None):
                     percent = int(count / point)
                 except ZeroDivisionError:
                     percent = 0
-                sys.stdout.write('\x1b[2K\r')
-                sys.stdout.write(colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
-                sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
-                sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
-                sys.stdout.write(colored(kbsec, 'cyan'))
-                sys.stdout.write(colored(' KiB/s, ', 'cyan'))
-                sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
-                sys.stdout.flush()
+                if not opts['daemon']:
+                    sys.stdout.write('\x1b[2K\r')
+                    sys.stdout.write(colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
+                    sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
+                    sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
+                    sys.stdout.write(colored(kbsec, 'cyan'))
+                    sys.stdout.write(colored(' KiB/s, ', 'cyan'))
+                    sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
+                    sys.stdout.flush()
                 delay_blocks = 0
                 delay_count = 0
 
@@ -387,6 +393,8 @@ def queue_urls(links, dbclient, opts):
     '''
     Check the database for any queued URLS, and add to the list
     '''
+    out = Output(opts)
+
     cur = dbclient.cursor()
     if isinstance(links, str):
         links = [links]
@@ -399,6 +407,7 @@ def queue_urls(links, dbclient, opts):
                 WHERE url = %s
             ''', [url])
             if cur.rowcount > 0:
+                out.info('URL has already been downloaded; use --force if necessary')
                 continue
 
         try:

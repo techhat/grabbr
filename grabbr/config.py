@@ -3,6 +3,7 @@
 Config for Grabbr
 '''
 # Python
+import os
 import argparse
 
 # 3rd party
@@ -36,6 +37,13 @@ def load(opts):
         dest='module_dir',
         action='append',
         help='Location for grabbr plugins',
+    )
+    parser.add_argument(
+        '--daemon',
+        dest='daemon',
+        action='store_true',
+        default=False,
+        help='Start as a background service',
     )
     parser.add_argument(
         '-f', '--force',
@@ -272,7 +280,13 @@ def load(opts):
     with open(cli_opts['config_file'], 'r') as ifh:
         opts.update(yaml.safe_load(ifh.read()))
 
-    # Lay down CLI opts on top of config file opts
+    # Override with any environment variables
+    for param in set(list(opts) + list(cli_opts)):
+        env_var = 'GRABBR_{}'.format(param.upper())
+        if env_var in os.environ:
+            cli_opts[param] = os.environ[env_var]
+
+    # Lay down CLI opts on top of config file opts and environment
     opts.update(cli_opts)
 
     # module_dir is an array
