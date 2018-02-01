@@ -157,7 +157,7 @@ def get_url(
     if cur.rowcount < 1:
         if opts['save_path']:
             req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-            content, req_headers = _save_path(url, req, wait, opts)
+            content, req_headers = _save_path(url, req, wait, opts, dbclient)
         else:
             req = client.request(opts['method'], url, headers=headers, data=data)
             content = req.text
@@ -180,7 +180,7 @@ def get_url(
             row_id = cur.fetchone()[1]
             if opts['save_path']:
                 req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-                content, req_headers = _save_path(url, req, wait, opts)
+                content, req_headers = _save_path(url, req, wait, opts, dbclient)
             else:
                 req = client.request(opts['method'], url, headers=headers, data=data)
                 content = req.text
@@ -210,7 +210,7 @@ def get_url(
     return url_id, content
 
 
-def _save_path(url, req, wait, opts):
+def _save_path(url, req, wait, opts, dbclient):
     '''
     Save the URL to a path
     '''
@@ -220,10 +220,10 @@ def _save_path(url, req, wait, opts):
         file_name = os.path.join(opts['save_path'], urlcomps[1], newpath)
     else:
         file_name = os.path.join(opts['save_path'], urlcomps[2].split('/')[-1])
-    return status(req, url, file_name, wait, opts)
+    return status(req, url, file_name, wait, opts, dbclient)
 
 
-def status(req, media_url, file_name, wait=0, opts=None, queue_id=None):
+def status(req, media_url, file_name, wait=0, opts=None, dbclient=None):
     '''
     Show status of the download
     '''
@@ -276,7 +276,7 @@ def status(req, media_url, file_name, wait=0, opts=None, queue_id=None):
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
             if opts.get('hard_stop'):
-                queue_urls(links, dbclient, opts, opts['queue_id'])
+                queue_urls([media_url], dbclient, opts)
                 break
             if opts.get('abort'):
                 break
@@ -313,7 +313,8 @@ def status(req, media_url, file_name, wait=0, opts=None, queue_id=None):
                     percent = 0
                 if not opts['daemon']:
                     sys.stdout.write('\x1b[2K\r')
-                    sys.stdout.write(colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
+                    sys.stdout.write(
+                        colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
                     sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
                     sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
                     sys.stdout.write(colored(kbsec, 'cyan'))
@@ -398,7 +399,7 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
         dbclient.commit()
 
 
-def queue_urls(links, dbclient, opts, queue_id=None):
+def queue_urls(links, dbclient, opts):
     '''
     Check the database for any queued URLS, and add to the list
     '''
@@ -408,7 +409,7 @@ def queue_urls(links, dbclient, opts, queue_id=None):
     if isinstance(links, str):
         links = [links]
     for url in links:
-        if opts.get('force') is not True and not queue_id:
+        if opts.get('force') is not True and not opts.get('queue_id'):
             # Check for URL in DB
             cur.execute('''
                 SELECT id
@@ -419,9 +420,9 @@ def queue_urls(links, dbclient, opts, queue_id=None):
                 out.info('URL has already been downloaded; use --force if necessary')
                 continue
 
-        if queue_id is not None:
+        if opts.get('queue_id') is not None:
             query = 'INSERT INTO dl_queue (id, url) VALUES (%s, %s)'
-            args = [queue_id, url]
+            args = [opts['queue_id'], url]
         else:
             query = 'INSERT INTO dl_queue (url) VALUES (%s)'
             args = [url]

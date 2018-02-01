@@ -55,7 +55,7 @@ def daemonize(opts):
             # exit first parent
             sys.exit(0)
     except OSError as exc:
-        out.error('fork #1 failed: %s (%s)', exc.errno, exc)
+        out.error('fork #1 failed: {} ({})'.format(exc.errno, exc))
         sys.exit(1)
 
     os.chdir('/')
@@ -68,7 +68,7 @@ def daemonize(opts):
         if pid > 0:
             sys.exit(0)
     except OSError as exc:
-        out.error('fork #2 failed: %s (%s)', exc.errno, exc)
+        out.error('fork #2 failed: {} ({})'.format(exc.errno, exc))
         sys.exit(1)
 
 
@@ -194,7 +194,10 @@ def run(run_opts=None):
                         if os.getpid() != process.pid:
                             verified_running = True
                             if opts['daemon']:
-                                out.error('grabbr already running, or improperly stopped', force=True)
+                                out.error(
+                                    'grabbr already running, or improperly stopped',
+                                    force=True,
+                                )
                                 sys.exit(1)
                             else:
                                 out.info('grabbr already running, adding item(s) to the queue')
