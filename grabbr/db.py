@@ -71,6 +71,7 @@ def pop_dl_queue(dbclient, urls, opts):
     urls.append(cur.fetchone()[0])
     cur.execute('DELETE FROM dl_queue WHERE id = %s', [url_id])
     dbclient.commit()
+    opts['queue_id'] = url_id
 
 
 def list_queue(dbclient, opts):

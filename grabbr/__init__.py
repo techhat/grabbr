@@ -81,6 +81,10 @@ def run(run_opts=None):
 
     opts, urls, parser = grabbr.config.load(run_opts)
 
+    if opts.get('stop') or opts.get('hard_stop') or opts.get('abort'):
+        open(opts['stop_file'], 'a').close()
+        return
+
     if opts['daemon']:
         daemonize(opts)
 
@@ -130,9 +134,9 @@ def run(run_opts=None):
         # Use a while instead of for, because the list is expected to expand
         while True:
             url_id = None
-            if os.path.exists('/var/run/grabbr/stop'):
+            if os.path.exists(opts['stop_file']):
                 out.warn('stop file found, exiting')
-                os.remove('/var/run/grabbr/stop')
+                os.remove(opts['stop_file'])
                 break
             if len(urls) < 1 and opts['use_queue'] is True:
                 grabbr.db.pop_dl_queue(dbclient, urls, opts)

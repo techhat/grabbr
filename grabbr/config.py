@@ -46,6 +46,31 @@ def load(opts):
         help='Start as a background service',
     )
     parser.add_argument(
+        '--stop',
+        dest='stop',
+        action='store_true',
+        help='Stop after the current download',
+    )
+    parser.add_argument(
+        '--hard-stop',
+        dest='hard_stop',
+        action='store_true',
+        help='Stop, delete and requeue current download, then exit',
+    )
+    parser.add_argument(
+        '--abort',
+        dest='abort',
+        action='store_true',
+        help='Stop, delete current download, exit',
+    )
+    parser.add_argument(
+        '--stop-file',
+        dest='stop_file',
+        action='store',
+        default='/var/run/grabbr/stop',
+        help='Location of the stop file',
+    )
+    parser.add_argument(
         '-f', '--force',
         dest='force',
         action='store_true',

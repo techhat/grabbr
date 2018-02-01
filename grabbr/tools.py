@@ -45,14 +45,14 @@ class Output(object):
 
     def warn(self, msg, force=False):
         '''
-        warnrmational only
+        Something is possibly wrong, but not enough to stop running
         '''
         if not self.opts['daemon'] or force is True:
             print(colored(msg, self.opts.get('warn_color', 'yellow')))
 
     def error(self, msg, force=False):
         '''
-        errorrmational only
+        Something is wrong enough to halt execution
         '''
         if not self.opts['daemon'] or force is True:
             print(colored(msg, self.opts.get('error_color', 'red'), attrs=['bold']))
@@ -223,7 +223,7 @@ def _save_path(url, req, wait, opts):
     return status(req, url, file_name, wait, opts)
 
 
-def status(req, media_url, file_name, wait=0, opts=None):
+def status(req, media_url, file_name, wait=0, opts=None, queue_id=None):
     '''
     Show status of the download
     '''
@@ -275,6 +275,11 @@ def status(req, media_url, file_name, wait=0, opts=None):
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
+            if opts.get('hard_stop'):
+                queue_urls(links, dbclient, opts, opts['queue_id'])
+                break
+            if opts.get('abort'):
+                break
             if is_text is True:
                 content += str(block)
             fhp.write(block)
@@ -290,7 +295,7 @@ def status(req, media_url, file_name, wait=0, opts=None):
                 except ZeroDivisionError:
                     blocks_left = 0
                 kbsec = (buffer_size / 1024) * delay_count
-                try:
+                ry:
                     seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
                 except ZeroDivisionError:
                     seconds_left = 0
@@ -318,13 +323,17 @@ def status(req, media_url, file_name, wait=0, opts=None):
                 delay_blocks = 0
                 delay_count = 0
 
+    if opts.get('hard_stop') or opts.get('abort'):
+        os.remove(file_name)
+
     if is_text is True and opts.get('save_html', True) is False:
         os.remove(file_name)
 
     if not content:
         content = None
 
-    print()
+    if not opts['daemon']:
+        print()
     time.sleep(wait)
 
     return content, req_headers
@@ -389,7 +398,7 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
         dbclient.commit()
 
 
-def queue_urls(links, dbclient, opts):
+def queue_urls(links, dbclient, opts, queue_id=None):
     '''
     Check the database for any queued URLS, and add to the list
     '''
@@ -399,7 +408,7 @@ def queue_urls(links, dbclient, opts):
     if isinstance(links, str):
         links = [links]
     for url in links:
-        if opts.get('force') is not True:
+        if opts.get('force') is not True and not queue_id:
             # Check for URL in DB
             cur.execute('''
                 SELECT id
@@ -410,8 +419,15 @@ def queue_urls(links, dbclient, opts):
                 out.info('URL has already been downloaded; use --force if necessary')
                 continue
 
+        if queue_id is not None:
+            query = 'INSERT INTO dl_queue (id, url) VALUES (%s, %s)'
+            args = [queue_id, url]
+        else:
+            query = 'INSERT INTO dl_queue (url) VALUES (%s)'
+            args = [url]
+
         try:
-            cur.execute('INSERT INTO dl_queue (url) VALUES (%s)', [url])
+            cur.execute(query, args)
             dbclient.commit()
         except psycopg2.IntegrityError:
             # This URL is already queued
