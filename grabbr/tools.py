@@ -295,7 +295,7 @@ def status(req, media_url, file_name, wait=0, opts=None, queue_id=None):
                 except ZeroDivisionError:
                     blocks_left = 0
                 kbsec = (buffer_size / 1024) * delay_count
-                ry:
+                try:
                     seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
                 except ZeroDivisionError:
                     seconds_left = 0
