@@ -22,6 +22,7 @@ import salt.config
 import grabbr.db
 import grabbr.tools
 import grabbr.config
+from grabbr.version import __version__
 
 
 def loader(opts, urls, dbclient):
@@ -90,6 +91,10 @@ def run(run_opts=None):
 
     out = grabbr.tools.Output(opts)
     dbclient = grabbr.db.client(opts)
+
+    if opts.get('version'):
+        out.info(__version__)
+        return
 
     if opts.get('input_file'):
         if opts['input_file'] == '-':

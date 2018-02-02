@@ -9,6 +9,9 @@ import argparse
 # 3rd party
 import yaml
 
+# Internal
+from grabbr.version import __version__
+
 
 def load(opts):
     '''
@@ -293,9 +296,14 @@ def load(opts):
         '--user-agent',
         dest='user_agent',
         action='store',
-        default=('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.11 '
-                 '(KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11'),
+        default='grabbr {}'.format(__version__),
         help="Just download the URL; don't call any plugins to process it",
+    )
+    parser.add_argument(
+        '--version',
+        dest='version',
+        action='store_true',
+        help='Display the version and exit',
     )
     parser.add_argument(dest='urls', nargs=argparse.REMAINDER)
 
