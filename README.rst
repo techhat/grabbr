@@ -30,7 +30,8 @@ The following settings are also configurable:
 .. code-block:: yaml
 
     pid_file: /var/run/grabbr/pid
-    module_dir: /srv/grabbr-plugins
+    module_dir:
+      - /srv/grabbr-plugins
     force: False
     random_wait: False
     headers:
