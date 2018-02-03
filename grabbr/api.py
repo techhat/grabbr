@@ -48,6 +48,12 @@ def MakeGrabbrHTTPRequestHandler(opts):
             if opts.get('stop') or opts.get('hard_stop') or opts.get('abort'):
                 open(opts['stop_file'], 'a').close()
 
+        def log_message(self, fmt, *args):
+            '''
+            Don't log to the console
+            '''
+            return
+
     return GrabbrHTTPRequestHandler
 
 
