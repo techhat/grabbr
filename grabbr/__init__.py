@@ -20,6 +20,7 @@ import salt.config
 
 # Internal
 import grabbr.db
+import grabbr.api
 import grabbr.tools
 import grabbr.config
 from grabbr.version import __version__
@@ -71,6 +72,8 @@ def daemonize(opts):
     except OSError as exc:
         out.error('fork #2 failed: {} ({})'.format(exc.errno, exc))
         sys.exit(1)
+
+    grabbr.api.run(opts)
 
 
 def run(run_opts=None):
@@ -142,9 +145,13 @@ def run(run_opts=None):
             if os.path.exists(opts['stop_file']):
                 out.warn('stop file found, exiting')
                 os.remove(opts['stop_file'])
+                opts['http_api'].shutdown()
                 break
             if len(urls) < 1 and opts['use_queue'] is True:
                 grabbr.db.pop_dl_queue(dbclient, urls, opts)
+            if opts['urls']:
+                grabbr.tools.queue_urls(opts['urls'], dbclient, opts)
+                opts['urls'] = []
             try:
                 url = urls.pop(0)
             except IndexError:

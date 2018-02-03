@@ -63,6 +63,40 @@ that are analogous to an option in wget will be used, when appropriate. There
 are some options that don't match up. Those, and the reasoning for their
 deviation, are described in the Grabbr vs Wget document.
 
+API Configuration
+-----------------
+Grabbr runs a tiny web server, which can be used to set configuration in
+real-time. By default this server runs on port ``42424``, and is bound to
+``127.0.0.1``. Because there is no security (authentication, HTTPS, etc), it is
+highly recommended that you do _not_ change these settings. However, if you
+need to, they are as follows:
+
+.. code-block:: yaml
+
+    api_addr: 127.0.0.1
+    api_port: 42424
+
+This interface is very simple. Configuration is passed in as name=value pairs
+via a GET method, and the configuration will be updated.
+
+.. code-block::
+
+    http://localhost:42424/?user_agent=mygrabbr
+
+The API can also be used to issue a ``stop`` (or ``hard_stop`` or ``abort``)
+command to Grabbr:
+
+.. code-block::
+
+    http://localhost:42424/?stop=True
+
+And finally, the API can be used to add URLs to the download queue:
+
+.. code-block::
+
+   http://localhost:42424/?queue=True&urls=http%3A%2F%2Fexample.com
+
+
 Configuration Options
 =====================
 The following options are available for Grabbr.
