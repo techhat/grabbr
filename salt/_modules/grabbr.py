@@ -61,3 +61,10 @@ def abort():
     Abort the Grabbr daemon
     '''
     _query(abort=True)
+
+
+def list_queue():
+    '''
+    List the contents of the queue
+    '''
+    return _query(list_queue=True)

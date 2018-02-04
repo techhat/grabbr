@@ -78,14 +78,19 @@ def list_queue(dbclient, opts):
     '''
     List all queued URLs in the database
     '''
+    ret = []
     out = grabbr.tools.Output(opts)
 
     cur = dbclient.cursor()
     cur.execute('SELECT url FROM dl_queue')
     if cur.rowcount > 0:
         for row in cur.fetchall():
+            ret.append(row[0])
             out.info('{}'.format(row[0]))
     out.info('{} URLS queued'.format(cur.rowcount))
     if not opts.get('already_running'):
-        os.remove(opts['pid_file'])
-    sys.exit(0)
+        try:
+            os.remove(opts['pid_file'])
+        except FileNotFoundError:
+            pass
+    return {'urls': ret, 'number_queued': cur.rowcount}

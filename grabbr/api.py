@@ -3,10 +3,14 @@
 API interface
 '''
 # Python
+import json
 import urllib
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
+
+# Internal
+import grabbr.db
 
 
 class GrabbrHTTPServer(ThreadingMixIn, HTTPServer):
@@ -20,6 +24,7 @@ def MakeGrabbrHTTPRequestHandler(opts):
         Process arguments
         '''
         def __init__(self, *args, **kwargs):
+            self.dbclient = grabbr.db.client(opts)
             super(GrabbrHTTPRequestHandler, self).__init__(*args, **kwargs)
 
         def do_GET(self):
@@ -28,6 +33,10 @@ def MakeGrabbrHTTPRequestHandler(opts):
             '''
             qstr = self.path.lstrip('/?')
             data = urllib.parse.parse_qs(qstr)
+            if 'list_queue' in data:
+                queue = grabbr.db.list_queue(self.dbclient, opts)
+                self.send(json.dumps(queue))
+                return
             for item in ('headers', 'module_dir'):
                 if item in data:
                     opts[item] = data[item]
@@ -39,14 +48,20 @@ def MakeGrabbrHTTPRequestHandler(opts):
                     opts['headers']['User-Agent'] = data[item][0]
                 else:
                     opts[item] = data[item][0]
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(bytes('True', 'utf8'))
+            self.send('True')
 
             # Stop the server if necessary
             if opts.get('stop') or opts.get('hard_stop') or opts.get('abort'):
                 open(opts['stop_file'], 'a').close()
+
+        def send(self, message, response=200, content_type='text/html'):
+            '''
+            Send a message to the client
+            '''
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes(message, 'utf8'))
 
         def log_message(self, fmt, *args):
             '''
