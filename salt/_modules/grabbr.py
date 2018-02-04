@@ -35,6 +35,13 @@ def queue(urls, force=False, data=None):
     _query(urls=urls, force=force, data=data)
 
 
+def start():
+    '''
+    Start the Grabbr daemon
+    '''
+    __salt__['cmd.run_bg'](('grabbr', '--daemon'))
+
+
 def stop():
     '''
     Stop the Grabbr daemon
