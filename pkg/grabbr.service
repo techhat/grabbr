@@ -1,0 +1,13 @@
+[Unit]
+Description=Grabbr Daemon
+Documentation=man:grabbr(1)
+After=network.target
+
+[Service]
+Type=forking
+NotifyAccess=none
+ExecStart=/usr/bin/grabbr --daemon
+ExecStop=/usr/bin/grabbr --stop
+
+[Install]
+WantedBy=multi-user.target
