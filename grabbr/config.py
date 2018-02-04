@@ -21,6 +21,8 @@ def load(opts):
     opts['module_dir'] = []
 
     parser = argparse.ArgumentParser()
+
+    # Basic configuration
     parser.add_argument(
         '--config-file',
         dest='config_file',
@@ -41,6 +43,8 @@ def load(opts):
         action='append',
         help='Location for grabbr plugins',
     )
+
+    # Control
     parser.add_argument(
         '--daemon',
         dest='daemon',
@@ -73,6 +77,8 @@ def load(opts):
         default='/var/run/grabbr/stop',
         help='Location of the stop file',
     )
+
+    # Downloading
     parser.add_argument(
         '-f', '--force',
         dest='force',
@@ -107,13 +113,6 @@ def load(opts):
         action='store_true',
         default=False,
         help='Whether to display (pprint) the headers when requesting a URL',
-    )
-    parser.add_argument(
-        '-v', '--verbose',
-        dest='verbose',
-        action='store_true',
-        default=False,
-        help="Display more information about what's going on",
     )
     parser.add_argument(
         '-i', '--input-file',
@@ -155,13 +154,6 @@ def load(opts):
         help='Add the URLs to the download queue and exit',
     )
     parser.add_argument(
-        '-l', '--list-queue',
-        dest='list_queue',
-        action='store_true',
-        default=False,
-        help='List the remaining URLS in the download queue',
-    )
-    parser.add_argument(
         '-p', '--reprocess',
         dest='reprocess',
         action='store',
@@ -175,27 +167,6 @@ def load(opts):
         action='store_true',
         default=False,
         help="Don't cache the target in the database",
-    )
-    parser.add_argument(
-        '--source',
-        dest='source',
-        action='store_true',
-        default=False,
-        help="Display the URL's source",
-    )
-    parser.add_argument(
-        '--render', '--dump',
-        dest='render',
-        action='store_true',
-        default=False,
-        help='Render the content',
-    )
-    parser.add_argument(
-        '--links',
-        dest='links',
-        action='store_true',
-        default=False,
-        help='Display by a list of the absolute URLs in the page',
     )
     parser.add_argument(
         '--queue-links',
@@ -246,6 +217,28 @@ def load(opts):
         help='When downloading (with --save-path), do NOT save HTML files',
     )
     parser.add_argument(
+        '--use-plugins',
+        dest='use_plugins',
+        action='store_true',
+        default=True,
+        help="Download the URL, using the plugins to process it (default)",
+    )
+    parser.add_argument(
+        '--no-plugins',
+        dest='use_plugins',
+        action='store_false',
+        help="Just download the URL; don't call any plugins to process it",
+    )
+    parser.add_argument(
+        '--user-agent',
+        dest='user_agent',
+        action='store',
+        default='grabbr {}'.format(__version__),
+        help="Just download the URL; don't call any plugins to process it",
+    )
+
+    # Templating
+    parser.add_argument(
         '--rename', '--rename-template',
         dest='rename_template',
         action='store',
@@ -265,6 +258,8 @@ def load(opts):
         default=0,
         help='Zero-padding to be used for {count}',
     )
+
+    # Recursion
     parser.add_argument(
         '--level',
         dest='level',
@@ -279,25 +274,42 @@ def load(opts):
         default=False,
         help='Enable spanning across hosts when doing recursive retrieving',
     )
+
+    # Informational
     parser.add_argument(
-        '--use-plugins',
-        dest='use_plugins',
+        '--source',
+        dest='source',
         action='store_true',
-        default=True,
-        help="Download the URL, using the plugins to process it (default)",
+        default=False,
+        help="Display the URL's source",
     )
     parser.add_argument(
-        '--no-plugins',
-        dest='use_plugins',
-        action='store_false',
-        help="Just download the URL; don't call any plugins to process it",
+        '--render', '--dump',
+        dest='render',
+        action='store_true',
+        default=False,
+        help='Render the content',
     )
     parser.add_argument(
-        '--user-agent',
-        dest='user_agent',
-        action='store',
-        default='grabbr {}'.format(__version__),
-        help="Just download the URL; don't call any plugins to process it",
+        '--links',
+        dest='links',
+        action='store_true',
+        default=False,
+        help='Display by a list of the absolute URLs in the page',
+    )
+    parser.add_argument(
+        '-l', '--list-queue',
+        dest='list_queue',
+        action='store_true',
+        default=False,
+        help='List the remaining URLS in the download queue',
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        dest='verbose',
+        action='store_true',
+        default=False,
+        help="Display more information about what's going on",
     )
     parser.add_argument(
         '--version',
