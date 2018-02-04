@@ -18,8 +18,8 @@ def _query(**params):
     '''
     Send a command to the API
     '''
-    api_host = __opts__.get('grabbr_host', '127.0.0.1')
-    api_port = __opts__.get('grabbr_port', 42424)
+    api_host = __salt__['config.get']('grabbr_host', '127.0.0.1')
+    api_port = __salt__['config.get']('grabbr_port', 42424)
 
     url = 'http://{0}:{1}'.format(api_host, api_port)
 
