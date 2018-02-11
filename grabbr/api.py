@@ -18,7 +18,10 @@ class GrabbrHTTPServer(ThreadingMixIn, HTTPServer):
     Threaded HTTP Server
     '''
 
-def MakeGrabbrHTTPRequestHandler(opts):
+def MakeGrabbrHTTPRequestHandler(opts):  # pylint: disable=invalid-name
+    '''
+    Return an HTTP class which can handle opts being passed in
+    '''
     class GrabbrHTTPRequestHandler(BaseHTTPRequestHandler):
         '''
         Process arguments
@@ -27,7 +30,7 @@ def MakeGrabbrHTTPRequestHandler(opts):
             self.dbclient = grabbr.db.client(opts)
             super(GrabbrHTTPRequestHandler, self).__init__(*args, **kwargs)
 
-        def do_GET(self):
+        def do_GET(self):  # pylint: disable=invalid-name
             '''
             Only GET requests are supported at this time
             '''
@@ -58,12 +61,12 @@ def MakeGrabbrHTTPRequestHandler(opts):
             '''
             Send a message to the client
             '''
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
+            self.send_response(response)
+            self.send_header('Content-type', content_type)
             self.end_headers()
             self.wfile.write(bytes(message, 'utf8'))
 
-        def log_message(self, fmt, *args):
+        def log_message(self, fmt, *args):  # pylint: disable=arguments-differ,unused-argument
             '''
             Don't log to the console
             '''
