@@ -236,6 +236,12 @@ def load(opts):
         default='grabbr {}'.format(__version__),
         help="Just download the URL; don't call any plugins to process it",
     )
+    parser.add_argument(
+        '--refresh-interval',
+        dest='refresh_interval',
+        action='store',
+        help="Auto-populate the paused_until field in the download queue",
+    )
 
     # Templating
     parser.add_argument(

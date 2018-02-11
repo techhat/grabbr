@@ -4,7 +4,7 @@ Database functions for Grabbr
 '''
 # Python
 import os
-import sys
+import datetime
 
 # 3rd party
 import psycopg2
@@ -67,9 +67,16 @@ def pop_dl_queue(dbclient, urls, opts):
         return
 
     # Queue the URL and delete it from the queue
-    cur.execute('SELECT url FROM dl_queue WHERE id = %s', [url_id])
-    urls.append(cur.fetchone()[0])
-    cur.execute('DELETE FROM dl_queue WHERE id = %s', [url_id])
+    cur.execute('SELECT url, refresh_interval FROM dl_queue WHERE id = %s', [url_id])
+    url, refresh = cur.fetchone()
+    urls.append(url)
+    if refresh:
+        next_refresh = datetime.datetime.now() + datetime.timedelta(**refresh)
+        cur.execute('''
+            UPDATE dl_queue SET locked_by = '', paused_until = %s WHERE id = %s
+        ''', [next_refresh, url_id])
+    else:
+        cur.execute('DELETE FROM dl_queue WHERE id = %s', [url_id])
     dbclient.commit()
     opts['queue_id'] = url_id
 

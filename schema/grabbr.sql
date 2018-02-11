@@ -12,6 +12,7 @@ CREATE TABLE dl_queue (
     dl_order integer NOT NULL default 1000000,
     paused boolean NOT NULL default FALSE,
     paused_until timestamp,
+    refresh_interval jsonb,
 );
 
 CREATE TABLE referers (

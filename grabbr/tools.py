@@ -420,12 +420,20 @@ def queue_urls(links, dbclient, opts):
                 out.info('URL has already been downloaded; use --force if necessary')
                 continue
 
+        fields = ['url']
+        args = [url]
         if opts.get('queue_id') is not None:
-            query = 'INSERT INTO dl_queue (id, url) VALUES (%s, %s)'
-            args = [opts['queue_id'], url]
-        else:
-            query = 'INSERT INTO dl_queue (url) VALUES (%s)'
-            args = [url]
+            fields.append('id')
+            args.append(opts['queue_id'])
+
+        if 'refresh_interval' in opts:
+            fields.append('refresh_interval')
+            args.append(opts['refresh_interval'])
+
+        query = 'INSERT INTO dl_queue ({}) VALUES ({})'.format(
+            ', '.join(fields),
+            ', '.join(['%s' for arg in range(len(args))])
+        )
 
         try:
             cur.execute(query, args)
