@@ -251,9 +251,10 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
     content = ''
 
     cur = dbclient.cursor()
+    agent_id = opts.get('id', 'unknown')
     cur.execute(
         'INSERT INTO active_dl (url_uuid, started_by) VALUES (%s, %s)',
-        [url_uuid, opts.get('id', 'unknown')]
+        [url_uuid, agent_id]
     )
 
     out.action('Downloading: {}'.format(media_url))
@@ -278,6 +279,14 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
     delay_blocks = 0
     delay_count = 0
 
+    opts['dl_data'] = {
+        'url': media_url,
+        'bytes_total': '',
+        'bytes_elapsed': '',
+        'time_total': '',
+        'time_left': '',
+        'kbsec': 0,
+    }
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
@@ -317,6 +326,11 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
                     percent = int(count / point)
                 except ZeroDivisionError:
                     percent = 0
+                opts['dl_data']['bytes_total']   = total
+                opts['dl_data']['bytes_elapsed'] = count
+                opts['dl_data']['time_total']    = time_total
+                opts['dl_data']['time_left']     = time_left
+                opts['dl_data']['kbsec']         = kbsec
                 if not opts['daemon']:
                     sys.stdout.write('\x1b[2K\r')
                     sys.stdout.write(
@@ -329,6 +343,8 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
                     sys.stdout.flush()
                 delay_blocks = 0
                 delay_count = 0
+
+    del opts['dl_data']
 
     if opts.get('hard_stop') or opts.get('abort'):
         os.remove(file_name)
