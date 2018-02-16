@@ -68,3 +68,10 @@ def list_queue():
     List the contents of the queue
     '''
     return _query(list_queue=True)
+
+
+def show_opts():
+    '''
+    List the opts for the daemon
+    '''
+    return _query(show_opts=True)
