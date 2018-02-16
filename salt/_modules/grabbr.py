@@ -3,6 +3,8 @@
 Salt execution module for Grabbr
 '''
 
+import json
+
 from salt.ext import six
 import salt.utils.http
 
@@ -14,7 +16,7 @@ def __virtual__():
     return True
 
 
-def _query(**params):
+def _query(decode=False, **params):
     '''
     Send a command to the API
     '''
@@ -23,7 +25,12 @@ def _query(**params):
 
     url = 'http://{0}:{1}'.format(api_host, api_port)
 
-    salt.utils.http.query(url, params=params)
+    return salt.utils.http.query(
+        url,
+        params=params,
+        decode=decode,
+        decode_type='json',
+    )
 
 
 def queue(urls, force=False, data=None):
@@ -75,3 +82,11 @@ def show_opts():
     List the opts for the daemon
     '''
     return _query(show_opts=True)
+
+
+def active_downloads():
+    '''
+    Show active downloads
+    '''
+    context = _query(decode=True, show_context=True).get('dict', '')
+    return context.get('dl_data', {})
