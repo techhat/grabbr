@@ -58,7 +58,7 @@ def pop_dl_queue(dbclient, urls, opts):
             LIMIT 1
         )
         RETURNING uuid
-    ''', [opts.get('uuid', 'unknown')])
+    ''', [opts.get('id', 'unknown')])
     dbclient.commit()
     if cur.rowcount > 0:
         data = cur.fetchone()

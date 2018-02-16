@@ -157,7 +157,7 @@ def get_url(
     if cur.rowcount < 1:
         if opts['save_path']:
             req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-            content, req_headers = _save_path(url, req, wait, opts, dbclient)
+            content, req_headers = _save_path(url, url_uuid, req, wait, opts, dbclient)
         else:
             req = client.request(opts['method'], url, headers=headers, data=data)
             content = req.text
@@ -180,7 +180,7 @@ def get_url(
             row_id = cur.fetchone()[1]
             if opts['save_path']:
                 req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-                content, req_headers = _save_path(url, req, wait, opts, dbclient)
+                content, req_headers = _save_path(url, url_uuid, req, wait, opts, dbclient)
             else:
                 req = client.request(opts['method'], url, headers=headers, data=data)
                 content = req.text
@@ -210,7 +210,7 @@ def get_url(
     return url_uuid, content
 
 
-def _save_path(url, req, wait, opts, dbclient):
+def _save_path(url, url_uuid, req, wait, opts, dbclient):
     '''
     Save the URL to a path
     '''
@@ -220,10 +220,10 @@ def _save_path(url, req, wait, opts, dbclient):
         file_name = os.path.join(opts['save_path'], urlcomps[1], newpath)
     else:
         file_name = os.path.join(opts['save_path'], urlcomps[2].split('/')[-1])
-    return status(req, url, file_name, wait, opts, dbclient)
+    return status(req, url, url_uuid, file_name, wait, opts, dbclient)
 
 
-def status(req, media_url, file_name, wait=0, opts=None, dbclient=None):
+def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None):
     '''
     Show status of the download
     '''
@@ -249,6 +249,12 @@ def status(req, media_url, file_name, wait=0, opts=None, dbclient=None):
             if req_headers[header].startswith('text'):
                 is_text = True
     content = ''
+
+    cur = dbclient.cursor()
+    cur.execute(
+        'INSERT INTO active_dl (url_uuid, started_by) VALUES (%s, %s)',
+        [url_uuid, opts.get('id', 'unknown')]
+    )
 
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
@@ -332,6 +338,8 @@ def status(req, media_url, file_name, wait=0, opts=None, dbclient=None):
 
     if not content:
         content = None
+
+    cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [])
 
     if not opts['daemon']:
         print()

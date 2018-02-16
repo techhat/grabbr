@@ -31,3 +31,10 @@ CREATE TABLE dl_queue (
     refresh_interval jsonb,
     primary key (uuid)
 );
+
+CREATE TABLE active_dl (
+    uuid uuid not null default uuid_generate_v4(),
+    started_at timestamp,
+    started_by text,
+    primary key (uuid)
+);
