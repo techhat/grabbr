@@ -311,6 +311,13 @@ def load(opts):
         help='List the remaining URLS in the download queue',
     )
     parser.add_argument(
+        '--show-opts',
+        dest='show_opts',
+        action='store_true',
+        default=False,
+        help='Return a copy of opts for this instance',
+    )
+    parser.add_argument(
         '-v', '--verbose',
         dest='verbose',
         action='store_true',

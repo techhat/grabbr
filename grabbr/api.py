@@ -40,6 +40,11 @@ def MakeGrabbrHTTPRequestHandler(opts):  # pylint: disable=invalid-name
                 queue = grabbr.db.list_queue(self.dbclient, opts)
                 self.send(json.dumps(queue))
                 return
+            if 'show_opts' in data:
+                tmp_opts = opts.copy()
+                del tmp_opts['http_api']
+                self.send(json.dumps(tmp_opts, indent=4), content_type='text/json')
+                return
             for item in ('headers', 'module_dir'):
                 if item in data:
                     opts[item] = data[item]

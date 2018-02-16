@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import copy
+import pprint
 import urllib
 
 # 3rd party
@@ -97,6 +98,10 @@ def run(run_opts=None):
 
     if opts.get('version'):
         out.info(__version__)
+        return
+
+    if opts.get('show_opts'):
+        out.info(pprint.pformat(opts))
         return
 
     if opts.get('list_queue', False) is True:
