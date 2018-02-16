@@ -27,7 +27,7 @@ import grabbr.config
 from grabbr.version import __version__
 
 
-def loader(opts, urls, dbclient):
+def loader(opts, context, urls, dbclient):
     '''
     Load spider modules
     '''
@@ -41,13 +41,14 @@ def loader(opts, urls, dbclient):
             u'__master_opts__': master_opts,
             u'__minion_opts__': minion_opts,
             u'__opts__': opts,
+            u'__context__': context,
             u'__urls__': urls,
             u'__dbclient__': dbclient,
         },
     )
 
 
-def daemonize(opts):
+def daemonize(opts, context):
     '''
     Spawn a new process
     '''
@@ -74,7 +75,7 @@ def daemonize(opts):
         out.error('fork #2 failed: {} ({})'.format(exc.errno, exc))
         sys.exit(1)
 
-    grabbr.api.run(opts)
+    grabbr.api.run(opts, context)
 
 
 def run(run_opts=None):
@@ -85,13 +86,14 @@ def run(run_opts=None):
         run_opts = {}
 
     opts, urls, parser = grabbr.config.load(run_opts)
+    context = {}
 
     if opts.get('stop') or opts.get('hard_stop') or opts.get('abort'):
         open(opts['stop_file'], 'a').close()
         return
 
     if opts['daemon']:
-        daemonize(opts)
+        daemonize(opts, context)
 
     out = grabbr.tools.Output(opts)
     dbclient = grabbr.db.client(opts)
@@ -102,6 +104,10 @@ def run(run_opts=None):
 
     if opts.get('show_opts'):
         out.info(pprint.pformat(opts))
+        return
+
+    if context.get('show_context'):
+        out.info(pprint.pformat(context))
         return
 
     if opts.get('list_queue', False) is True:
@@ -132,7 +138,7 @@ def run(run_opts=None):
         grabbr.tools.queue_urls(urls, dbclient, opts)
         return
 
-    modules = grabbr.loader(opts, urls, dbclient)
+    modules = grabbr.loader(opts, context, urls, dbclient)
     if opts['reprocess']:
         urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 
@@ -184,7 +190,7 @@ def run(run_opts=None):
                 url_uuid, url, content = modules[mod](url)
             if url_uuid is None:
                 url_uuid, content = grabbr.tools.get_url(
-                    url, dbclient=dbclient, opts=opts
+                    url, dbclient=dbclient, opts=opts, context=context
                 )
             # Display the source of the URL content
             if opts.get('source', False) is True:

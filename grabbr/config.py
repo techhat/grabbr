@@ -333,6 +333,13 @@ def load(opts):
         help='Return a copy of opts for this instance',
     )
     parser.add_argument(
+        '--show-context',
+        dest='show_context',
+        action='store_true',
+        default=False,
+        help='Return a copy of the context for this instance',
+    )
+    parser.add_argument(
         '-v', '--verbose',
         dest='verbose',
         action='store_true',

@@ -18,7 +18,7 @@ class GrabbrHTTPServer(ThreadingMixIn, HTTPServer):
     Threaded HTTP Server
     '''
 
-def MakeGrabbrHTTPRequestHandler(opts):  # pylint: disable=invalid-name
+def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
     '''
     Return an HTTP class which can handle opts being passed in
     '''
@@ -44,6 +44,9 @@ def MakeGrabbrHTTPRequestHandler(opts):  # pylint: disable=invalid-name
                 tmp_opts = opts.copy()
                 del tmp_opts['http_api']
                 self.send(json.dumps(tmp_opts, indent=4), content_type='text/json')
+                return
+            if 'show_context' in data:
+                self.send(json.dumps(context, indent=4), content_type='text/json')
                 return
             for item in ('headers', 'module_dir'):
                 if item in data:
@@ -80,7 +83,7 @@ def MakeGrabbrHTTPRequestHandler(opts):  # pylint: disable=invalid-name
     return GrabbrHTTPRequestHandler
 
 
-def run(opts):
+def run(opts, context):
     '''
     Main HTTP server
     '''
@@ -88,7 +91,7 @@ def run(opts):
         opts.get('api_addr', '127.0.0.1'),
         opts.get('api_port', 42424),
     ))
-    grabbr_handler = MakeGrabbrHTTPRequestHandler(opts)
+    grabbr_handler = MakeGrabbrHTTPRequestHandler(opts, context)
     httpd = GrabbrHTTPServer(
         server_address,
         grabbr_handler,

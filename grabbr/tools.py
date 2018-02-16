@@ -79,6 +79,7 @@ def get_url(
         dbclient=None,
         client=requests,
         opts=None,
+        context=None,
     ):
     '''
     Download a URL (if necessary) and store it
@@ -157,7 +158,7 @@ def get_url(
     if cur.rowcount < 1:
         if opts['save_path']:
             req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-            content, req_headers = _save_path(url, url_uuid, req, wait, opts, dbclient)
+            content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
         else:
             req = client.request(opts['method'], url, headers=headers, data=data)
             content = req.text
@@ -180,7 +181,7 @@ def get_url(
             row_id = cur.fetchone()[1]
             if opts['save_path']:
                 req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-                content, req_headers = _save_path(url, url_uuid, req, wait, opts, dbclient)
+                content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
             else:
                 req = client.request(opts['method'], url, headers=headers, data=data)
                 content = req.text
@@ -210,7 +211,7 @@ def get_url(
     return url_uuid, content
 
 
-def _save_path(url, url_uuid, req, wait, opts, dbclient):
+def _save_path(url, url_uuid, req, wait, opts, context, dbclient):
     '''
     Save the URL to a path
     '''
@@ -220,10 +221,19 @@ def _save_path(url, url_uuid, req, wait, opts, dbclient):
         file_name = os.path.join(opts['save_path'], urlcomps[1], newpath)
     else:
         file_name = os.path.join(opts['save_path'], urlcomps[2].split('/')[-1])
-    return status(req, url, url_uuid, file_name, wait, opts, dbclient)
+    return status(req, url, url_uuid, file_name, wait, opts, context, dbclient)
 
 
-def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None):
+def status(
+        req,
+        media_url,
+        url_uuid,
+        file_name,
+        wait=0,
+        opts=None,
+        context=None,
+        dbclient=None,
+    ):
     '''
     Show status of the download
     '''
@@ -231,6 +241,9 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
 
     if opts is None:
         opts = {}
+
+    if context is None:
+        context = {}
 
     file_name = _rename(media_url, file_name, opts)
 
@@ -257,6 +270,9 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
         [url_uuid, agent_id]
     )
 
+    cur.execute('SELECT url FROM urls WHERE uuid = %s', [url_uuid])
+    root_url = cur.fetchone()[0]
+
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
         out.warn('... {} exists, skipping'.format(file_name))
@@ -279,8 +295,10 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
     delay_blocks = 0
     delay_count = 0
 
-    opts['dl_data'] = {
-        'url': media_url,
+    context['dl_data'] = {
+        'url': root_url,
+        'media_url': media_url,
+        'url_uuid': url_uuid,
         'bytes_total': '',
         'bytes_elapsed': '',
         'time_total': '',
@@ -326,11 +344,11 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
                     percent = int(count / point)
                 except ZeroDivisionError:
                     percent = 0
-                opts['dl_data']['bytes_total']   = total
-                opts['dl_data']['bytes_elapsed'] = count
-                opts['dl_data']['time_total']    = time_total
-                opts['dl_data']['time_left']     = time_left
-                opts['dl_data']['kbsec']         = kbsec
+                context['dl_data']['bytes_total']   = total
+                context['dl_data']['bytes_elapsed'] = count
+                context['dl_data']['time_total']    = time_total
+                context['dl_data']['time_left']     = time_left
+                context['dl_data']['kbsec']         = kbsec
                 if not opts['daemon']:
                     sys.stdout.write('\x1b[2K\r')
                     sys.stdout.write(
@@ -344,7 +362,7 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
                 delay_blocks = 0
                 delay_count = 0
 
-    del opts['dl_data']
+    del context['dl_data']
 
     if opts.get('hard_stop') or opts.get('abort'):
         os.remove(file_name)
@@ -355,7 +373,7 @@ def status(req, media_url, url_uuid, file_name, wait=0, opts=None, dbclient=None
     if not content:
         content = None
 
-    cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [])
+    cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [url_uuid])
 
     if not opts['daemon']:
         print()
