@@ -89,11 +89,15 @@ def list_queue(dbclient, opts):
     out = grabbr.tools.Output(opts)
 
     cur = dbclient.cursor()
-    cur.execute('SELECT url FROM dl_queue')
+    cur.execute('SELECT url, paused FROM dl_queue')
     if cur.rowcount > 0:
         for row in cur.fetchall():
-            ret.append(row[0])
-            out.info('{}'.format(row[0]))
+            if bool(row[1]) is True:
+                line = '{} (paused)'.format(row[0])
+            else:
+                line = row[0]
+            ret.append(line)
+            out.info(line)
     out.info('{} URLS queued'.format(cur.rowcount))
     if not opts.get('already_running'):
         try:
@@ -101,3 +105,37 @@ def list_queue(dbclient, opts):
         except FileNotFoundError:
             pass
     return {'urls': ret, 'number_queued': cur.rowcount}
+
+
+def pause(dbclient, opts, urls):
+    '''
+    Pause URL(s) in the download queue
+    '''
+    ret = {'urls': urls, 'number_paused': len(urls)}
+    out = grabbr.tools.Output(opts)
+
+    cur = dbclient.cursor()
+
+    spacer = ', '.join(['%s' for url in range(len(urls))])
+    sql = 'UPDATE dl_queue SET paused = true WHERE url IN ({})'.format(spacer)
+    cur.execute(sql, urls)
+    dbclient.commit()
+    out.info(ret)
+    return ret
+
+
+def unpause(dbclient, opts, urls):
+    '''
+    Unpause URL(s) in the download queue
+    '''
+    ret = {'urls': urls, 'number_unpaused': len(urls)}
+    out = grabbr.tools.Output(opts)
+
+    cur = dbclient.cursor()
+
+    spacer = ', '.join(['%s' for url in range(len(urls))])
+    sql = 'UPDATE dl_queue SET paused = false WHERE url IN ({})'.format(spacer)
+    cur.execute(sql, urls)
+    dbclient.commit()
+    out.info(ret)
+    return ret

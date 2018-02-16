@@ -243,6 +243,20 @@ def load(opts):
         action='store',
         help="Auto-populate the paused_until field in the download queue",
     )
+    parser.add_argument(
+        '--pause',
+        dest='pause',
+        action='store',
+        nargs='+',
+        help='Name of a queued URL to pause',
+    )
+    parser.add_argument(
+        '--unpause',
+        dest='unpause',
+        action='store',
+        nargs='+',
+        help='Name of a queued URL to unpause',
+    )
 
     # Templating
     parser.add_argument(

@@ -108,6 +108,14 @@ def run(run_opts=None):
         grabbr.db.list_queue(dbclient, opts)
         return
 
+    if opts.get('pause'):
+        grabbr.db.pause(dbclient, opts, opts['pause'])
+        return
+
+    if opts.get('unpause'):
+        grabbr.db.unpause(dbclient, opts, opts['unpause'])
+        return
+
     if opts.get('input_file'):
         if opts['input_file'] == '-':
             grabbr.tools.queue_urls(sys.stdin.readlines(), dbclient, opts)
