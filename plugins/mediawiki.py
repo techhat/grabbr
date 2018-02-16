@@ -28,7 +28,7 @@ def func_map(url):
     return None
 
 
-def wikipedia_raw(url_id, url, content):
+def wikipedia_raw(url_uuid, url, content):
     '''
     Grab raw wikipedia data
     '''
@@ -36,4 +36,12 @@ def wikipedia_raw(url_id, url, content):
     title = url.split('?')[0].split('/')[-1]
     file_name = '{}/{}'.format(cache_path, title)
     req = requests.get(url, stream=True, params={'action': 'raw'})
-    grabbr.tools.status(req, url, file_name)
+    grabbr.tools.status(
+        req,
+        url,
+        url_uuid,
+        file_name,
+        dbclient=__dbclient__,
+        opts=__opts__,
+        context=__context__,
+    )
