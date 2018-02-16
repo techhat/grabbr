@@ -1,28 +1,33 @@
+CREATE EXTENSION "uuid-ossp";
+
+CREATE TABLE urls (
+    uuid uuid not null default uuid_generate_v4(),
+    url text,
+    last_retrieved timestamp without time zone DEFAULT now(),
+    primary key (uuid)
+);
+
 CREATE TABLE content (
-    id serial primary key,
-    url_id integer,
+    uuid uuid not null default uuid_generate_v4(),
+    url_uuid uuid,
     retrieved timestamp without time zone DEFAULT now(),
     data jsonb,
-    cache_path text
+    cache_path text,
+    primary key (uuid)
+);
+
+CREATE TABLE referers (
+    url_uuid uuid NOT NULL,
+    referer_uuid uuid NOT NULL,
+    last_referred timestamp without time zone DEFAULT now()
 );
 
 CREATE TABLE dl_queue (
-    id serial primary key,
+    uuid uuid not null default uuid_generate_v4(),
     url text
     dl_order integer NOT NULL default 1000000,
     paused boolean NOT NULL default FALSE,
     paused_until timestamp,
     refresh_interval jsonb,
-);
-
-CREATE TABLE referers (
-    url_id integer NOT NULL,
-    referer_id integer NOT NULL,
-    last_referred timestamp without time zone DEFAULT now()
-);
-
-CREATE TABLE urls (
-    id serial primary key,
-    url text,
-    last_retrieved timestamp without time zone DEFAULT now()
+    primary key (uuid)
 );

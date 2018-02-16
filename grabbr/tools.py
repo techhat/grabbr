@@ -58,7 +58,7 @@ class Output(object):
             print(colored(msg, self.opts.get('error_color', 'red'), attrs=['bold']))
 
 
-def process_url(url_id, url, content, modules):
+def process_url(url_uuid, url, content, modules):
     '''
     Process a URL
     '''
@@ -69,7 +69,7 @@ def process_url(url_id, url, content, modules):
         if not mod.endswith('.func_map'):
             continue
         fun = modules[mod](url)
-    fun(url_id, url, content)
+    fun(url_uuid, url, content)
 
 
 def get_url(
@@ -108,7 +108,7 @@ def get_url(
 
     # Check for URL in DB
     cur.execute('''
-        SELECT id, url, last_retrieved
+        SELECT uuid, url, last_retrieved
         FROM urls
         WHERE url = %s
     ''', [url])
@@ -118,15 +118,15 @@ def get_url(
         cur.execute('''
             INSERT INTO urls
             (url) VALUES (%s)
-            RETURNING id
+            RETURNING uuid
         ''', [url])
         dbclient.commit()
-        url_id = cur.fetchone()[0]
-        out.action('{} has not been retrieved before, new ID is {}'.format(url, url_id))
+        url_uuid = cur.fetchone()[0]
+        out.action('{} has not been retrieved before, new UUID is {}'.format(url, url_uuid))
     else:
-        # URL has been retrieved, get its ID
-        url_id = cur.fetchone()[0]
-        out.warn('{} exists, ID is {}'.format(url, url_id))
+        # URL has been retrieved, get its UUID
+        url_uuid = cur.fetchone()[0]
+        out.warn('{} exists, UUID is {}'.format(url, url_uuid))
         exists = True
 
     # Save referer relationships
@@ -134,10 +134,10 @@ def get_url(
         try:
             cur.execute('''
                 INSERT INTO referers
-                (url_id, referer_id)
+                (url_uuid, referer_uuid)
                 VALUES
                 (%s, %s)
-            ''', [url_id, parent])
+            ''', [url_uuid, parent])
             dbclient.commit()
         except psycopg2.IntegrityError:
             # This relationship already exists
@@ -148,12 +148,12 @@ def get_url(
 
     # Check for content
     cur.execute('''
-        SELECT data, id
+        SELECT data, uuid
         FROM content
-        WHERE url_id = %s
+        WHERE url_uuid = %s
         ORDER BY retrieved
         LIMIT 1
-    ''', [url_id])
+    ''', [url_uuid])
     if cur.rowcount < 1:
         if opts['save_path']:
             req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
@@ -167,10 +167,10 @@ def get_url(
         if content:
             cur.execute('''
                     INSERT INTO content
-                    (url_id, data) VALUES (%s, %s)
+                    (url_uuid, data) VALUES (%s, %s)
                 ''',
                 [
-                    url_id,
+                    url_uuid,
                     Json({'content': content})
                 ]
             )
@@ -190,11 +190,11 @@ def get_url(
             if content:
                 cur.execute('''
                         UPDATE content
-                        SET url_id = %s, data = %s
-                        WHERE id = %s
+                        SET url_uuid = %s, data = %s
+                        WHERE uuid = %s
                     ''',
                     [
-                        url_id,
+                        url_uuid,
                         Json({'content': content}),
                         row_id
                     ]
@@ -207,7 +207,7 @@ def get_url(
         if opts['random_wait'] is True:
             wait = opts.get('wait', 10)
             time.sleep(random.randrange(1, wait))
-    return url_id, content
+    return url_uuid, content
 
 
 def _save_path(url, req, wait, opts, dbclient):
@@ -351,7 +351,7 @@ def sizeof_fmt(num, suffix='B'):
     return "%.1f%s%s " % (num, 'Yi', suffix)
 
 
-def dbsave_media(cur, media_url, url_id, file_name, dbclient):
+def dbsave_media(cur, media_url, url_uuid, file_name, dbclient):
     '''
     Save a media item into the database, once it's been downloaded
 
@@ -359,13 +359,13 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
 
     media_url: The URL of the image/video that was downloaded
 
-    url_id: The ID of the parent of the media_url
+    url_uuid: The UUID of the parent of the media_url
 
     file_name: The place where the media_url was downloaded to
     '''
     try:
         cur.execute('''
-            INSERT INTO urls (url) values (%s) RETURNING id
+            INSERT INTO urls (url) values (%s) RETURNING uuid
         ''', [media_url])
         dbclient.commit()
         new_id = cur.fetchone()[0]
@@ -373,26 +373,26 @@ def dbsave_media(cur, media_url, url_id, file_name, dbclient):
         # This relationship already exists
         dbclient.rollback()
         cur.execute('''
-            SELECT id FROM urls WHERE url = %s
+            SELECT uuid FROM urls WHERE url = %s
         ''', [media_url])
         new_id = cur.fetchone()[0]
 
     try:
         cur.execute('''
-            INSERT INTO referers (url_id, referer_id) values (%s, %s)
-        ''', [new_id, url_id])
+            INSERT INTO referers (url_uuid, referer_uuid) values (%s, %s)
+        ''', [new_id, url_uuid])
         dbclient.commit()
     except psycopg2.IntegrityError:
         # This relationship already exists
         dbclient.rollback()
 
     cur.execute('''
-        SELECT COUNT(*) FROM content WHERE url_id = %s
+        SELECT COUNT(*) FROM content WHERE url_uuid = %s
     ''', [new_id])
     if cur.fetchone()[0] < 1:
         cur.execute('''
             INSERT INTO content
-            (url_id, cache_path)
+            (url_uuid, cache_path)
             VALUES
             (%s, %s)
         ''', [new_id, file_name])
@@ -412,7 +412,7 @@ def queue_urls(links, dbclient, opts):
         if opts.get('force') is not True and not opts.get('queue_id'):
             # Check for URL in DB
             cur.execute('''
-                SELECT id
+                SELECT uuid
                 FROM urls
                 WHERE url = %s
             ''', [url])
@@ -423,7 +423,7 @@ def queue_urls(links, dbclient, opts):
         fields = ['url']
         args = [url]
         if opts.get('queue_id') is not None:
-            fields.append('id')
+            fields.append('uuid')
             args.append(opts['queue_id'])
 
         if 'refresh_interval' in opts:

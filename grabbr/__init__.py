@@ -142,7 +142,7 @@ def run(run_opts=None):
         level = 0
         # Use a while instead of for, because the list is expected to expand
         while True:
-            url_id = None
+            url_uuid = None
             if os.path.exists(opts['stop_file']):
                 out.warn('stop file found, exiting')
                 os.remove(opts['stop_file'])
@@ -164,13 +164,13 @@ def run(run_opts=None):
             if url.strip() == '':
                 continue
             for mod in modules:
-                if isinstance(url_id, int) and url_id == 0:
+                if isinstance(url_uuid, int) and url_uuid == 0:
                     break
                 if not mod.endswith('.pre_flight'):
                     continue
-                url_id, url, content = modules[mod](url)
-            if url_id is None:
-                url_id, content = grabbr.tools.get_url(
+                url_uuid, url, content = modules[mod](url)
+            if url_uuid is None:
+                url_uuid, content = grabbr.tools.get_url(
                     url, dbclient=dbclient, opts=opts
                 )
             # Display the source of the URL content
@@ -184,7 +184,7 @@ def run(run_opts=None):
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('use_plugins', True) is True:
                 try:
-                    grabbr.tools.process_url(url_id, url, content, modules)
+                    grabbr.tools.process_url(url_uuid, url, content, modules)
                 except TypeError:
                     out.warn('No matching plugins were found')
             if opts.get('queue_re'):

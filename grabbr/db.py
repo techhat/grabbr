@@ -49,36 +49,36 @@ def pop_dl_queue(dbclient, urls, opts):
     cur.execute('''
         UPDATE dl_queue
         SET locked_by = %s
-        WHERE id = (
-            SELECT id
+        WHERE uuid = (
+            SELECT uuid
             FROM dl_queue
             WHERE paused = FALSE
             AND paused_until IS NULL
-            ORDER BY dl_order, id
+            ORDER BY dl_order, uuid
             LIMIT 1
         )
-        RETURNING id
-    ''', [opts.get('id', 'unknown')])
+        RETURNING uuid
+    ''', [opts.get('uuid', 'unknown')])
     dbclient.commit()
     if cur.rowcount > 0:
         data = cur.fetchone()
-        url_id = data[0]
+        url_uuid = data[0]
     else:
         return
 
     # Queue the URL and delete it from the queue
-    cur.execute('SELECT url, refresh_interval FROM dl_queue WHERE id = %s', [url_id])
+    cur.execute('SELECT url, refresh_interval FROM dl_queue WHERE uuid = %s', [url_uuid])
     url, refresh = cur.fetchone()
     urls.append(url)
     if refresh:
         next_refresh = datetime.datetime.now() + datetime.timedelta(**refresh)
         cur.execute('''
-            UPDATE dl_queue SET locked_by = '', paused_until = %s WHERE id = %s
-        ''', [next_refresh, url_id])
+            UPDATE dl_queue SET locked_by = '', paused_until = %s WHERE uuid = %s
+        ''', [next_refresh, url_uuid])
     else:
-        cur.execute('DELETE FROM dl_queue WHERE id = %s', [url_id])
+        cur.execute('DELETE FROM dl_queue WHERE uuid = %s', [url_uuid])
     dbclient.commit()
-    opts['queue_id'] = url_id
+    opts['queue_id'] = url_uuid
 
 
 def list_queue(dbclient, opts):
