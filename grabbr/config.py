@@ -41,6 +41,7 @@ def load(opts):
         '--module-dir',
         dest='module_dir',
         action='append',
+        default=[],
         help='Location for grabbr plugins',
     )
 
@@ -337,6 +338,8 @@ def load(opts):
     # Load in the config file
     with open(cli_opts['config_file'], 'r') as ifh:
         opts.update(yaml.safe_load(ifh.read()))
+
+    cli_opts['module_dir'].extend(opts['module_dir'])
 
     # Override with any environment variables
     for param in set(list(opts) + list(cli_opts)):
