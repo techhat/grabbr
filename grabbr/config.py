@@ -31,11 +31,11 @@ def load(opts):
         help='Default location for the config file',
     )
     parser.add_argument(
-        '--pid-file',
-        dest='pid_file',
+        '--run-dir',
+        dest='run_dir',
         action='store',
-        default='/var/run/grabbr/pid',
-        help='Default location for the PID file',
+        default=None,  # This is defined further down
+        help='Default location for the PID file, stop file, etc',
     )
     parser.add_argument(
         '--module-dir',
@@ -72,11 +72,18 @@ def load(opts):
         help='Stop, delete current download, exit',
     )
     parser.add_argument(
-        '--stop-file',
-        dest='stop_file',
+        '--api-addr',
+        dest='api_addr',
         action='store',
-        default='/var/run/grabbr/stop',
-        help='Location of the stop file',
+        default='127.0.0.1',
+        help='The host address of the API',
+    )
+    parser.add_argument(
+        '--api-port',
+        dest='api_port',
+        action='store',
+        default=42424,
+        help='The host port of the API',
     )
 
     # Downloading
@@ -395,5 +402,15 @@ def load(opts):
         opts['method'] = 'GET'
 
     urls = opts['urls']
+
+    if not opts.get('id'):
+        opts['id'] = 'unknown'
+
+    if opts.get('run_dir') is None:
+        opts['run_dir'] = os.path.join('/var/run/grabbr', opts['id'])
+
+    opts['pid_file'] = os.path.join(opts['run_dir'], 'pid')
+    opts['stop_file'] = os.path.join(opts['run_dir'], 'stop')
+    opts['meta_file'] = os.path.join(opts['run_dir'], 'meta')
 
     return opts, urls, parser

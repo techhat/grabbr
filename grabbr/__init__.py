@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import copy
+import json
 import pprint
 import urllib
 
@@ -151,11 +152,23 @@ def run(run_opts=None):
             return
 
     # Write pid file
+    pid = os.getpid()
     if not os.path.exists(opts['pid_file']):
         opts['already_running'] = False
+        os.makedirs(os.path.dirname(opts['pid_file']), mode=0o700, exist_ok=True)
         with open(opts['pid_file'], 'w') as pfh:
-            pfh.write(str(os.getpid()))
+            pfh.write(str(pid))
         pfh.close()
+
+    # Write the metadata file
+    metadata = {
+        'id': opts['id'],
+        'pid': pid,
+        'api_addr': opts['api_addr'],
+        'api_port': opts['api_port'],
+    }
+    with open(opts['meta_file'], 'w') as fh_:
+        json.dump(metadata, fh_, indent=4)
 
     if not opts['already_running'] or opts.get('single') is True:
         level = 0
@@ -212,6 +225,10 @@ def run(run_opts=None):
                 break
         try:
             os.remove(opts['pid_file'])
+        except FileNotFoundError:
+            pass
+        try:
+            os.remove(opts['meta_file'])
         except FileNotFoundError:
             pass
     else:
