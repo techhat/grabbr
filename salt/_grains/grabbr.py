@@ -2,7 +2,12 @@
 '''
 Salt grains for Grabbr
 '''
-import salt.utils.http
+# Python
+import os
+import json
+
+# 3rd party
+import psutil
 
 
 def __virtual__():
@@ -14,27 +19,14 @@ def __virtual__():
 
 def process():
     '''
-    Return the ID of this instance of grabbr
+    Return the IDs of any running Grabbr instances
     '''
-    opts = _query(show_opts=True).get('dict', '')
-    ret = {
-        'grabbr_id': opts.get('id', 'unknown'),
-    }
-    return ret
-
-
-def _query(**params):
-    '''
-    Send a command to the API
-    '''
-    api_host = __opts__.get('grabbr_host', '127.0.0.1')
-    api_port = __opts__.get('grabbr_port', 42424)
-
-    url = 'http://{0}:{1}'.format(api_host, api_port)
-
-    return salt.utils.http.query(
-        url,
-        params=params,
-        decode=True,
-        decode_type='json',
-    )
+    ret = {}
+    run_dir = __opts__.get('grabbr_run_dir', '/var/run/grabbr')
+    for agent in os.listdir(run_dir):
+        meta_file = os.path.join(run_dir, agent, 'meta')
+        with open(meta_file, 'r') as mfh:
+            meta = json.load(mfh)
+            if psutil.Process(meta['pid']).cmdline()[0]:
+                ret[meta['id']] = meta
+    return {'grabbr_agents': ret}
