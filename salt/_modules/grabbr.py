@@ -61,7 +61,6 @@ def start(
         'grabbr', '--daemon',
         '--config-file', config_file,
         '--run-dir', run_dir,
-        '--module-dir', module_dir,
     )
 
     if module_dir is not None:
