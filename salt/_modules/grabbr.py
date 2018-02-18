@@ -63,6 +63,8 @@ def start(
         run_dir='/var/run/grabbr',
         module_dir=None,
         id_=None,
+        api_addr='127.0.0.1',
+        api_port=42424,
     ):
     '''
     Start the Grabbr daemon
@@ -93,6 +95,12 @@ def start(
     if id_ is not None:
         args.extend(['--id', id_])
 
+    if api_addr is not None:
+        args.extend(['--api-addr', api_addr])
+
+    if api_port is not None:
+        args.extend(['--api-port', api_port])
+
     __salt__['cmd.run_bg'](args)
 
 
@@ -121,7 +129,7 @@ def list_queue(id_=None):
     '''
     List the contents of the queue
     '''
-    return _query(list_queue=True, id_=id_)
+    return _query(list_queue=True)
 
 
 def show_opts(id_=None):
@@ -135,5 +143,5 @@ def active_downloads(id_=None):
     '''
     Show active downloads
     '''
-    context = _query(decode=True, show_context=True, id_=id_).get('dict', '')
+    context = _query(decode=True, show_context=True).get('dict', '')
     return context.get('dl_data', {})
