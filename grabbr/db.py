@@ -4,6 +4,7 @@ Database functions for Grabbr
 '''
 # Python
 import os
+import time
 import datetime
 
 # 3rd party
@@ -47,6 +48,7 @@ def pop_dl_queue(dbclient, urls, opts):
 
     # Lock a URL for this instance
     cur.execute('''
+        LOCK TABLE ONLY dl_queue;
         UPDATE dl_queue
         SET locked_by = %s
         WHERE uuid = (
@@ -58,13 +60,15 @@ def pop_dl_queue(dbclient, urls, opts):
             LIMIT 1
         )
         RETURNING uuid
-    ''', [opts.get('id', 'unknown')])
-    dbclient.commit()
+    ''', [opts['id']])
     if cur.rowcount > 0:
         data = cur.fetchone()
         url_uuid = data[0]
     else:
         return
+
+    # Helps out with the lock
+    time.sleep(.2)
 
     # Queue the URL and delete it from the queue
     cur.execute('SELECT url, refresh_interval FROM dl_queue WHERE uuid = %s', [url_uuid])
