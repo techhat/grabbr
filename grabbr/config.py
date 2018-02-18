@@ -47,6 +47,13 @@ def load(opts):
 
     # Control
     parser.add_argument(
+        '--id',
+        dest='id',
+        action='store',
+        default='unknown',
+        help='The ID of the Grabbr agent to control',
+    )
+    parser.add_argument(
         '--daemon',
         dest='daemon',
         action='store_true',
@@ -402,9 +409,6 @@ def load(opts):
         opts['method'] = 'GET'
 
     urls = opts['urls']
-
-    if not opts.get('id'):
-        opts['id'] = 'unknown'
 
     if opts.get('run_dir') is None:
         opts['run_dir'] = os.path.join('/var/run/grabbr', opts['id'])

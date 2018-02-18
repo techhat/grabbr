@@ -175,6 +175,9 @@ def run(run_opts=None):
         # Use a while instead of for, because the list is expected to expand
         while True:
             url_uuid = None
+            if opts['stop']:
+                opts['http_api'].shutdown()
+                break
             if os.path.exists(opts['stop_file']):
                 out.warn('stop file found, exiting')
                 os.remove(opts['stop_file'])

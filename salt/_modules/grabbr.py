@@ -2,10 +2,12 @@
 '''
 Salt execution module for Grabbr
 '''
-
+# python
 import os
 import json
 
+# salt
+from salt.exceptions import CommandExecutionError
 from salt.ext import six
 import salt.utils.http
 
@@ -17,12 +19,25 @@ def __virtual__():
     return True
 
 
-def _query(decode=False, **params):
+def _query(decode=False, id_=None, **params):
     '''
     Send a command to the API
     '''
-    api_host = __salt__['config.get']('grabbr_host', '127.0.0.1')
-    api_port = __salt__['config.get']('grabbr_port', 42424)
+    agents = __grains__['grabbr_agents']
+
+    if id_ is None:
+        if 'unknown' in agents:
+            id_ = 'unknown'
+        else:
+            if len(list(agents)) == 1:
+                id_ = list(agents)[0]
+            else:
+                raise CommandExecutionError('A valid Grabbr id_ was not specified')
+    elif id_ not in agents:
+        raise CommandExecutionError('{} is not running'.format(id_))
+
+    api_host = agents[id_].get('api_addr', '127.0.0.1')
+    api_port = agents[id_].get('api_port', 42424)
 
     url = 'http://{0}:{1}'.format(api_host, api_port)
 
@@ -47,6 +62,7 @@ def start(
         config_file='/etc/grabbr/grabbr',
         run_dir='/var/run/grabbr',
         module_dir=None,
+        id_=None,
     ):
     '''
     Start the Grabbr daemon
@@ -74,47 +90,50 @@ def start(
         args.append('--module-dir')
         args.extend(module_dir)
 
+    if id_ is not None:
+        args.extend(['--id', id_])
+
     __salt__['cmd.run_bg'](args)
 
 
-def stop():
+def stop(id_=None):
     '''
     Stop the Grabbr daemon
     '''
-    _query(stop=True)
+    _query(stop=True, id_=id_)
 
 
-def hard_stop():
+def hard_stop(id_=None):
     '''
     Hard stop the Grabbr daemon
     '''
-    _query(hard_stop=True)
+    _query(hard_stop=True, id_=id_)
 
 
-def abort():
+def abort(id_=None):
     '''
     Abort the Grabbr daemon
     '''
-    _query(abort=True)
+    _query(abort=True, id_=id_)
 
 
-def list_queue():
+def list_queue(id_=None):
     '''
     List the contents of the queue
     '''
-    return _query(list_queue=True)
+    return _query(list_queue=True, id_=id_)
 
 
-def show_opts():
+def show_opts(id_=None):
     '''
     List the opts for the daemon
     '''
-    return _query(show_opts=True)
+    return _query(show_opts=True, id_=id_)
 
 
-def active_downloads():
+def active_downloads(id_=None):
     '''
     Show active downloads
     '''
-    context = _query(decode=True, show_context=True).get('dict', '')
+    context = _query(decode=True, show_context=True, id_=id_).get('dict', '')
     return context.get('dl_data', {})
