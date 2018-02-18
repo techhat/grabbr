@@ -50,7 +50,6 @@ def load(opts):
         '--id',
         dest='id',
         action='store',
-        default='unknown',
         help='The ID of the Grabbr agent to control',
     )
     parser.add_argument(
@@ -374,6 +373,11 @@ def load(opts):
     with open(cli_opts['config_file'], 'r') as ifh:
         opts.update(yaml.safe_load(ifh.read()))
 
+    # Preserve the ID from being overwritten by "None"
+    id_ = opts.get('id')
+    if cli_opts.get('id') is None:
+        cli_opts['id'] = id_
+
     cli_opts['module_dir'].extend(opts['module_dir'])
 
     # Override with any environment variables
@@ -409,6 +413,9 @@ def load(opts):
         opts['method'] = 'GET'
 
     urls = opts['urls']
+
+    if not opts.get('id'):
+        opts['id'] = 'unknown'
 
     if opts.get('run_dir') is None:
         opts['run_dir'] = os.path.join('/var/run/grabbr', opts['id'])
