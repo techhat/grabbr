@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='grabbr',
-    version='0.6.1',
+    version='0.6.2',
     description='Data mining tool',
     author='Joseph Hall',
     author_email='techhat@gmail.com',
