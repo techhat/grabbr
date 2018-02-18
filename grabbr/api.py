@@ -89,7 +89,7 @@ def run(opts, context):
     '''
     server_address = ((
         opts.get('api_addr', '127.0.0.1'),
-        opts.get('api_port', 42424),
+        int(opts.get('api_port', 42424)),
     ))
     grabbr_handler = MakeGrabbrHTTPRequestHandler(opts, context)
     httpd = GrabbrHTTPServer(
