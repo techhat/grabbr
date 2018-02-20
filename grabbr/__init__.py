@@ -49,6 +49,21 @@ def loader(opts, context, urls, dbclient):
     )
 
 
+def search(opts, dbclient):
+    '''
+    Load search modules
+    '''
+    return LazyLoader(
+        opts['search_dir'],
+        {},
+        tag=u'grabbr/search',
+        pack={
+            u'__opts__': opts,
+            u'__dbclient__': dbclient,
+        },
+    )
+
+
 def daemonize(opts, context):
     '''
     Spawn a new process
@@ -123,6 +138,17 @@ def run(run_opts=None):
         grabbr.db.unpause(dbclient, opts, opts['unpause'])
         return
 
+    if opts.get('search'):
+        searches = grabbr.search(opts, dbclient)
+        engine = opts['search'][0]
+        fun = '.'.join([engine, 'search'])
+        if fun not in searches:
+            out.error('The {} search engine is not available'.format(engine))
+        else:
+            for item in searches[fun](opts):
+                out.info(item)
+        return
+
     if opts.get('input_file'):
         if opts['input_file'] == '-':
             grabbr.tools.queue_urls(sys.stdin.readlines(), dbclient, opts)
@@ -140,6 +166,7 @@ def run(run_opts=None):
         return
 
     modules = grabbr.loader(opts, context, urls, dbclient)
+
     if opts['reprocess']:
         urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 

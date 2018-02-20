@@ -19,6 +19,7 @@ def load(opts):
     '''
     opts['already_running'] = True
     opts['module_dir'] = []
+    opts['search_dir'] = []
 
     parser = argparse.ArgumentParser()
 
@@ -43,6 +44,13 @@ def load(opts):
         action='append',
         default=[],
         help='Location for grabbr plugins',
+    )
+    parser.add_argument(
+        '--search-dir',
+        dest='search_dir',
+        action='append',
+        default=[],
+        help='Location for grabbr search plugins',
     )
 
     # Control
@@ -309,6 +317,15 @@ def load(opts):
         help='Enable spanning across hosts when doing recursive retrieving',
     )
 
+    # Built-in tools
+    parser.add_argument(
+        '--search',
+        dest='search',
+        action='store',
+        nargs='+',
+        help='Perform a search, using the specified engine',
+    )
+
     # Informational
     parser.add_argument(
         '--source',
@@ -379,6 +396,7 @@ def load(opts):
         cli_opts['id'] = id_
 
     cli_opts['module_dir'].extend(opts['module_dir'])
+    cli_opts['search_dir'].extend(opts['search_dir'])
 
     # Override with any environment variables
     for param in set(list(opts) + list(cli_opts)):
@@ -392,6 +410,10 @@ def load(opts):
     # module_dir is an array
     if not opts['module_dir']:
         opts['module_dir'] = ['/srv/grabbr-plugins']
+
+    # search_dir is an array
+    if not opts['search_dir']:
+        opts['search_dir'] = ['/srv/grabbr-search']
 
     # Set up any headers for the agent
     if opts['headers'] is None:
