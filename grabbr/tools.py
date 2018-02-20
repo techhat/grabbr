@@ -249,11 +249,9 @@ def status(
 
     cache_dir = '/'.join(file_name.split('/')[:-1])
     try:
-        os.makedirs(cache_dir)
+        os.makedirs(cache_dir, mode=0o0755, exist_ok=True)
     except PermissionError as exc:
         out.error('Cannot create directory {}: {}'.format(cache_dir, exc))
-    except FileExistsError:
-        pass
 
     is_text = False
     req_headers = req.headers
