@@ -25,43 +25,8 @@ import grabbr.db
 import grabbr.api
 import grabbr.tools
 import grabbr.config
+import grabbr.loader
 from grabbr.version import __version__
-
-
-def loader(opts, context, urls, dbclient):
-    '''
-    Load spider modules
-    '''
-    master_opts = {}
-    minion_opts = salt.config.minion_config('/etc/salt/minion')
-    return LazyLoader(
-        opts['module_dir'],
-        minion_opts,
-        tag=u'grabbr',
-        pack={
-            u'__master_opts__': master_opts,
-            u'__minion_opts__': minion_opts,
-            u'__opts__': opts,
-            u'__context__': context,
-            u'__urls__': urls,
-            u'__dbclient__': dbclient,
-        },
-    )
-
-
-def search(opts, dbclient):
-    '''
-    Load search modules
-    '''
-    return LazyLoader(
-        opts['search_dir'],
-        {},
-        tag=u'grabbr/search',
-        pack={
-            u'__opts__': opts,
-            u'__dbclient__': dbclient,
-        },
-    )
 
 
 def daemonize(opts, context):
@@ -139,7 +104,7 @@ def run(run_opts=None):
         return
 
     if opts.get('search'):
-        searches = grabbr.search(opts, dbclient)
+        searches = grabbr.loader.search(opts, dbclient)
         engine = opts['search'][0]
         fun = '.'.join([engine, 'search'])
         if fun not in searches:
@@ -165,7 +130,7 @@ def run(run_opts=None):
         grabbr.tools.queue_urls(urls, dbclient, opts)
         return
 
-    modules = grabbr.loader(opts, context, urls, dbclient)
+    modules = grabbr.loader.plugin(opts, context, urls, dbclient)
 
     if opts['reprocess']:
         urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
