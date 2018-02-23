@@ -334,6 +334,13 @@ def load(opts):
         help='Perform a search, using the specified engine',
     )
     parser.add_argument(
+        '--search-limit',
+        dest='search_limit',
+        action='store',
+        default=30,
+        help='Maximum number of results for searches',
+    )
+    parser.add_argument(
         '--search-organize',
         dest='search_organize',
         action='store',
