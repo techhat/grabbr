@@ -45,6 +45,8 @@ def organize(url):
                 script = json.loads(data)
                 try:
                     script_type = script['@type'].lower()
+                except KeyError:
+                    return []
                 except TypeError:
                     return []
                 if script_type == 'recipe':
