@@ -103,6 +103,15 @@ def run(run_opts=None):
         grabbr.db.unpause(dbclient, opts, opts['unpause'])
         return
 
+    organizers = grabbr.loader.organize(opts, dbclient, context)
+    organize_engine = None
+    organize_fun = None
+    if opts.get('search_organize'):
+        organize_engine = opts['search_organize'][0]
+        organize_fun = '.'.join([organize_engine, 'organize'])
+        if organize_fun not in organizers:
+            out.error('The {} organizer is not available'.format(organize_engine))
+
     if opts.get('search'):
         searches = grabbr.loader.search(opts, dbclient)
         engine = opts['search'][0]
@@ -110,8 +119,13 @@ def run(run_opts=None):
         if fun not in searches:
             out.error('The {} search engine is not available'.format(engine))
         else:
-            for item in searches[fun](opts):
-                out.info(item)
+            for item in searches[fun]():
+                if organize_engine is not None:
+                    ret = organizers[organize_fun](item)
+                    if ret:
+                        out.info(pprint.pformat(ret))
+                else:
+                    out.info(item)
         return
 
     if opts.get('input_file'):

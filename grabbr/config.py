@@ -20,6 +20,7 @@ def load(opts):
     opts['already_running'] = True
     opts['module_dir'] = []
     opts['search_dir'] = []
+    opts['organize_dir'] = []
 
     parser = argparse.ArgumentParser()
 
@@ -51,6 +52,13 @@ def load(opts):
         action='append',
         default=[],
         help='Location for grabbr search plugins',
+    )
+    parser.add_argument(
+        '--organize-dir',
+        dest='organize_dir',
+        action='append',
+        default=[],
+        help='Location for grabbr organizer plugins',
     )
 
     # Control
@@ -325,6 +333,13 @@ def load(opts):
         nargs='+',
         help='Perform a search, using the specified engine',
     )
+    parser.add_argument(
+        '--search-organize',
+        dest='search_organize',
+        action='store',
+        nargs='+',
+        help='Send --search results to a organizer engine',
+    )
 
     # Informational
     parser.add_argument(
@@ -397,6 +412,7 @@ def load(opts):
 
     cli_opts['module_dir'].extend(opts['module_dir'])
     cli_opts['search_dir'].extend(opts['search_dir'])
+    cli_opts['organize_dir'].extend(opts['organize_dir'])
 
     # Override with any environment variables
     for param in set(list(opts) + list(cli_opts)):
@@ -414,6 +430,10 @@ def load(opts):
     # search_dir is an array
     if not opts['search_dir']:
         opts['search_dir'] = ['/srv/grabbr-search']
+
+    # organize_dir is an array
+    if not opts['organize_dir']:
+        opts['organize_dir'] = ['/srv/grabbr-organize']
 
     # Set up any headers for the agent
     if opts['headers'] is None:
