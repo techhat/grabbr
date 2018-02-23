@@ -61,7 +61,7 @@ def queue(urls, force=False, data=None):
 def start(
         config_file='/etc/grabbr/grabbr',
         run_dir='/var/run/grabbr',
-        module_dir=None,
+        parser_dir=None,
         id_=None,
         api_addr='127.0.0.1',
         api_port=42424,
@@ -81,16 +81,16 @@ def start(
         '--run-dir', run_dir,
     )
 
-    if module_dir is not None:
-        if isinstance(module_dir, str):
-            module_dir = [module_dir]
-        if not isinstance(module_dir, list):
-            raise Exception('module_dir must be a string or list')
-        for item in module_dir:
+    if parser_dir is not None:
+        if isinstance(parser_dir, str):
+            parser_dir = [parser_dir]
+        if not isinstance(parser_dir, list):
+            raise Exception('parser_dir must be a string or list')
+        for item in parser_dir:
             if not os.path.exists(item):
-                raise Exception('module_dir {} does not exist')
-        args.append('--module-dir')
-        args.extend(module_dir)
+                raise Exception('parser_dir {} does not exist')
+        args.append('--parser-dir')
+        args.extend(parser_dir)
 
     if id_ is not None:
         args.extend(['--id', id_])

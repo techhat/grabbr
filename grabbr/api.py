@@ -48,7 +48,7 @@ def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
             if 'show_context' in data:
                 self.send(json.dumps(context, indent=4), content_type='text/json')
                 return
-            for item in ('headers', 'module_dir'):
+            for item in ('headers', 'parser_dir'):
                 if item in data:
                     opts[item] = data[item]
                     del data[item]

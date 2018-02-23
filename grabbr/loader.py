@@ -10,16 +10,16 @@ import salt.config
 import grabbr.config
 
 
-def plugin(opts, context, urls, dbclient):
+def parser(opts, context, urls, dbclient):
     '''
     Load spider modules
     '''
     master_opts = {}
     minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
-        opts['module_dir'],
+        opts['parser_dir'],
         minion_opts,
-        tag=u'grabbr/plugin',
+        tag=u'grabbr/parser',
         pack={
             u'__master_opts__': master_opts,
             u'__minion_opts__': minion_opts,

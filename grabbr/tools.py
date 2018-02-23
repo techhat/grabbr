@@ -58,17 +58,17 @@ class Output(object):
             print(colored(msg, self.opts.get('error_color', 'red'), attrs=['bold']))
 
 
-def process_url(url_uuid, url, content, modules):
+def process_url(url_uuid, url, content, parsers):
     '''
     Process a URL
     '''
     fun = None
-    for mod in modules:
+    for mod in parsers:
         if fun is not None:
             break
         if not mod.endswith('.func_map'):
             continue
-        fun = modules[mod](url)
+        fun = parsers[mod](url)
     fun(url_uuid, url, content)
 
 

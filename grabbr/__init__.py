@@ -144,7 +144,7 @@ def run(run_opts=None):
         grabbr.tools.queue_urls(urls, dbclient, opts)
         return
 
-    modules = grabbr.loader.plugin(opts, context, urls, dbclient)
+    parsers = grabbr.loader.parser(opts, context, urls, dbclient)
 
     if opts['reprocess']:
         urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
@@ -204,12 +204,12 @@ def run(run_opts=None):
                     break
             if url.strip() == '':
                 continue
-            for mod in modules:
+            for mod in parsers:
                 if isinstance(url_uuid, int) and url_uuid == 0:
                     break
                 if not mod.endswith('.pre_flight'):
                     continue
-                url_uuid, url, content = modules[mod](url)
+                url_uuid, url, content = parsers[mod](url)
             if url_uuid is None:
                 url_uuid, content = grabbr.tools.get_url(
                     url, dbclient=dbclient, opts=opts, context=context
@@ -223,11 +223,11 @@ def run(run_opts=None):
                 out.info('\n'.join(hrefs))
             if opts.get('queuelinks', False) is True:
                 grabbr.tools.queue_urls(hrefs, dbclient, opts)
-            if opts.get('use_plugins', True) is True:
+            if opts.get('use_parsers', True) is True:
                 try:
-                    grabbr.tools.process_url(url_uuid, url, content, modules)
+                    grabbr.tools.process_url(url_uuid, url, content, parsers)
                 except TypeError:
-                    out.warn('No matching plugins were found')
+                    out.warn('No matching parsers were found')
             if opts.get('queue_re'):
                 grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
             if opts.get('single') is True:

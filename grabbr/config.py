@@ -18,7 +18,7 @@ def load(opts):
     Load configuration
     '''
     opts['already_running'] = True
-    opts['module_dir'] = []
+    opts['parser_dir'] = []
     opts['search_dir'] = []
     opts['organize_dir'] = []
 
@@ -40,11 +40,11 @@ def load(opts):
         help='Default location for the PID file, stop file, etc',
     )
     parser.add_argument(
-        '--module-dir',
-        dest='module_dir',
+        '--parser-dir',
+        dest='parser_dir',
         action='append',
         default=[],
-        help='Location for grabbr plugins',
+        help='Location for grabbr parser plugins',
     )
     parser.add_argument(
         '--search-dir',
@@ -247,24 +247,24 @@ def load(opts):
         help='When downloading (with --save-path), do NOT save HTML files',
     )
     parser.add_argument(
-        '--use-plugins',
-        dest='use_plugins',
+        '--use-parsers',
+        dest='use_parsers',
         action='store_true',
         default=True,
-        help="Download the URL, using the plugins to process it (default)",
+        help="Download the URL, using the parsers to process it (default)",
     )
     parser.add_argument(
-        '--no-plugins',
-        dest='use_plugins',
+        '--no-parsers',
+        dest='use_parsers',
         action='store_false',
-        help="Just download the URL; don't call any plugins to process it",
+        help="Just download the URL; don't call any parsers to process it",
     )
     parser.add_argument(
         '--user-agent',
         dest='user_agent',
         action='store',
         default='grabbr {}'.format(__version__),
-        help="Just download the URL; don't call any plugins to process it",
+        help='User agent to report to the server',
     )
     parser.add_argument(
         '--refresh-interval',
@@ -410,7 +410,7 @@ def load(opts):
     if cli_opts.get('id') is None:
         cli_opts['id'] = id_
 
-    cli_opts['module_dir'].extend(opts['module_dir'])
+    cli_opts['parser_dir'].extend(opts['parser_dir'])
     cli_opts['search_dir'].extend(opts['search_dir'])
     cli_opts['organize_dir'].extend(opts['organize_dir'])
 
@@ -423,9 +423,9 @@ def load(opts):
     # Lay down CLI opts on top of config file opts and environment
     opts.update(cli_opts)
 
-    # module_dir is an array
-    if not opts['module_dir']:
-        opts['module_dir'] = ['/srv/grabbr-plugins']
+    # parser_dir is an array
+    if not opts['parser_dir']:
+        opts['parser_dir'] = ['/srv/grabbr-parsers']
 
     # search_dir is an array
     if not opts['search_dir']:
