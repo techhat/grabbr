@@ -146,8 +146,8 @@ def run(run_opts=None):
                 out.error('There was an error reading {}: {}'.format(opts['input_file'], exc))
 
     if opts.get('queue', False) is True:
-        out.info('Adding item(s) to the queue')
-        grabbr.tools.queue_urls(urls, dbclient, opts)
+        count = grabbr.tools.queue_urls(urls, dbclient, opts)
+        out.info('Added item(s) to the queue, {} items now queued'.format(count))
         return
 
     parsers = grabbr.loader.parser(opts, context, urls, dbclient)
