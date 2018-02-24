@@ -30,6 +30,7 @@ CREATE TABLE dl_queue (
     paused_until timestamp,
     refresh_interval jsonb,
     primary key (uuid)
+    added timestamp default now(),
 );
 
 CREATE TABLE active_dl (

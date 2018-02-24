@@ -56,7 +56,7 @@ def pop_dl_queue(dbclient, urls, opts):
             FROM dl_queue
             WHERE paused = FALSE
             AND paused_until IS NULL
-            ORDER BY dl_order, uuid
+            ORDER BY dl_order, added
             LIMIT 1
         )
         RETURNING uuid
