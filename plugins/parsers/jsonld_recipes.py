@@ -65,9 +65,12 @@ def parse_recipe(url, content, recipe_dict):
     cache_path = __opts__.get('recipe_cache_path', '')
 
     text_data = '{}\n\n'.format(recipe_dict['name'])
-    for item in recipe_dict['recipeIngredient']:
-        text_data += '{}\n'.format(item)
-    text_data += '\n'
+    try:
+        for item in recipe_dict['recipeIngredient']:
+            text_data += '{}\n'.format(item)
+        text_data += '\n'
+    except KeyError:
+        pass
     if isinstance(recipe_dict.get('recipeInstructions'), str):
         recipe_dict['recipeInstructions'] = [recipe_dict['recipeInstructions']]
     elif recipe_dict.get('recipeInstructions') is None:
