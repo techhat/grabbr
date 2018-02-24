@@ -488,6 +488,8 @@ def queue_urls(links, dbclient, opts):
         except psycopg2.IntegrityError:
             # This URL is already queued
             dbclient.rollback()
+    cur.execute('SELECT count(*) FROM dl_queue')
+    return cur.fetchone()[0]
 
 
 def reprocess_urls(urls, patterns, dbclient=None):
