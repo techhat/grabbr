@@ -346,11 +346,11 @@ def status(
                     percent = int(count / point)
                 except ZeroDivisionError:
                     percent = 0
-                context['dl_data']['bytes_total']   = total
-                context['dl_data']['bytes_elapsed'] = count
-                context['dl_data']['time_total']    = time_total
-                context['dl_data']['time_left']     = time_left
-                context['dl_data']['kbsec']         = kbsec
+                context['dl_data']['bytes_total']   = total  # pylint: disable=bad-whitespace
+                context['dl_data']['bytes_elapsed'] = count  # pylint: disable=bad-whitespace
+                context['dl_data']['time_total']    = time_total  # pylint: disable=bad-whitespace
+                context['dl_data']['time_left']     = time_left  # pylint: disable=bad-whitespace
+                context['dl_data']['kbsec']         = kbsec  # pylint: disable=bad-whitespace
                 if not opts['daemon']:
                     sys.stdout.write('\x1b[2K\r')
                     sys.stdout.write(

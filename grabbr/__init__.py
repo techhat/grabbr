@@ -14,12 +14,12 @@ import pprint
 import urllib
 
 # 3rd party
-import psutil
 import yaml
+import psutil
+import requests
 from bs4 import BeautifulSoup
 from salt.loader import LazyLoader
 import salt.config
-import requests
 
 # Internal
 import grabbr.db
@@ -60,7 +60,7 @@ def daemonize(opts, context):
     grabbr.api.run(opts, context)
 
 
-def run(run_opts=None):
+def run(run_opts=None):  # pylint: disable=too-many-return-statements
     '''
     Run the program
     '''
@@ -128,7 +128,7 @@ def run(run_opts=None):
                     ret = organizers[organize_fun](item)
                     if ret:
                         out.info(pprint.pformat(ret))
-                        urls.append(item)
+                        #urls.append(item)
                 else:
                     out.info(item)
         if not organize_fun:

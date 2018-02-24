@@ -6,9 +6,6 @@ Basic functions for Grabbr
 from salt.loader import LazyLoader
 import salt.config
 
-# Internal
-import grabbr.config
-
 
 def parser(opts, context, urls, dbclient):
     '''
