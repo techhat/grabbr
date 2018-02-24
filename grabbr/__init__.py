@@ -193,7 +193,10 @@ def run(run_opts=None):
             if os.path.exists(opts['stop_file']):
                 out.warn('stop file found, exiting')
                 os.remove(opts['stop_file'])
-                opts['http_api'].shutdown()
+                try:
+                    opts['http_api'].shutdown()
+                except KeyError:
+                    pass
                 break
             if len(urls) < 1 and opts['use_queue'] is True:
                 grabbr.db.pop_dl_queue(dbclient, urls, opts)
@@ -272,5 +275,9 @@ def run(run_opts=None):
             except IndexError:
                 pass
         if verified_running is False:
-            out.error('grabbr not found in process list, check /var/run/grabbr/pid', force=True)
+            out.error(
+                'grabbr not found in process list, check {}'.format(
+                    opts['stop_file']
+                ), force=True
+            )
         grabbr.tools.queue_urls(urls, dbclient, opts)
