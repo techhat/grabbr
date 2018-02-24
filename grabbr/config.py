@@ -432,15 +432,15 @@ def load(opts):
 
     # parser_dir is an array
     if not opts['parser_dir']:
-        opts['parser_dir'] = ['/srv/grabbr-parsers']
+        opts['parser_dir'] = ['/srv/grabbr/parsers']
 
     # search_dir is an array
     if not opts['search_dir']:
-        opts['search_dir'] = ['/srv/grabbr-search']
+        opts['search_dir'] = ['/srv/grabbr/searchers']
 
     # organize_dir is an array
     if not opts['organize_dir']:
-        opts['organize_dir'] = ['/srv/grabbr-organize']
+        opts['organize_dir'] = ['/srv/grabbr/organizers']
 
     # Set up any headers for the agent
     if opts['headers'] is None:

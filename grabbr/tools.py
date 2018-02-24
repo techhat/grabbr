@@ -102,6 +102,7 @@ def get_url(
         if opts['random_wait'] is True:
             wait = opts.get('wait', 10)
             time.sleep(random.randrange(1, wait))
+        opts['warned'].add(url)
         return 0, content
 
     cur = dbclient.cursor()
@@ -129,6 +130,7 @@ def get_url(
         url_uuid = cur.fetchone()[0]
         out.warn('{} exists, UUID is {}'.format(url, url_uuid))
         exists = True
+        opts['warned'].add(url)
 
     # Save referer relationships
     if parent:
@@ -163,6 +165,7 @@ def get_url(
             req = client.request(opts['method'], url, headers=headers, data=data)
             content = req.text
             req_headers = req.headers
+        opts['warned'].add(url)
         if opts.get('include_headers') is True:
             out.info(pprint.pformat(dict(req_headers)))
         if content:
@@ -186,6 +189,7 @@ def get_url(
                 req = client.request(opts['method'], url, headers=headers, data=data)
                 content = req.text
                 req_headers = req.headers
+            opts['warned'].add(url)
             if opts.get('include_headers') is True:
                 out.info(pprint.pformat(dict(req_headers)))
             if content:
@@ -457,7 +461,10 @@ def queue_urls(links, dbclient, opts):
                 WHERE url = %s
             ''', [url])
             if cur.rowcount > 0:
-                out.info('URL has already been downloaded; use --force if necessary')
+                if url not in opts['warned']:
+                    out.info('URL has already been downloaded; use --force if necessary')
+                else:
+                    opts['warned'].add(url)
                 continue
 
         fields = ['url']

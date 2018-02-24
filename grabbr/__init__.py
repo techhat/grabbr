@@ -19,6 +19,7 @@ import yaml
 from bs4 import BeautifulSoup
 from salt.loader import LazyLoader
 import salt.config
+import requests
 
 # Internal
 import grabbr.db
@@ -103,6 +104,9 @@ def run(run_opts=None):
         grabbr.db.unpause(dbclient, opts, opts['unpause'])
         return
 
+    # Keeps track of the URLs that we've already warned about this session
+    opts['warned'] = set()
+
     organizers = grabbr.loader.organize(opts, dbclient, context)
     organize_engine = None
     organize_fun = None
@@ -124,9 +128,11 @@ def run(run_opts=None):
                     ret = organizers[organize_fun](item)
                     if ret:
                         out.info(pprint.pformat(ret))
+                        urls.append(item)
                 else:
                     out.info(item)
-        return
+        if not organize_fun:
+            return
 
     if opts.get('input_file'):
         if opts['input_file'] == '-':
@@ -153,7 +159,7 @@ def run(run_opts=None):
         grabbr.db.pop_dl_queue(dbclient, urls, opts)
 
     if not urls:
-        if not opts['daemon']:
+        if not opts['daemon'] and not organize_fun:
             parser.print_help()
             return
 
@@ -211,9 +217,13 @@ def run(run_opts=None):
                     continue
                 url_uuid, url, content = parsers[mod](url)
             if url_uuid is None:
-                url_uuid, content = grabbr.tools.get_url(
-                    url, dbclient=dbclient, opts=opts, context=context
-                )
+                try:
+                    url_uuid, content = grabbr.tools.get_url(
+                        url, dbclient=dbclient, opts=opts, context=context
+                    )
+                except requests.exceptions.MissingSchema as exc:
+                    out.error(exc)
+                    continue
             # Display the source of the URL content
             if opts.get('source', False) is True:
                 out.info(content)
