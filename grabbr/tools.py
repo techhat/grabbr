@@ -18,6 +18,9 @@ import psycopg2
 from psycopg2.extras import Json
 from bs4 import BeautifulSoup
 
+# Internal
+import grabbr.event
+
 
 class Output(object):
     '''
@@ -307,6 +310,7 @@ def status(
         'time_left': '',
         'kbsec': 0,
     }
+    grabbr.event.fire('grabbr/download', {root_url: 'started'}, opts)
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
@@ -376,6 +380,7 @@ def status(
         content = None
 
     cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [url_uuid])
+    grabbr.event.fire('grabbr/download', {root_url: 'complete'}, opts)
 
     if not opts['daemon']:
         print()

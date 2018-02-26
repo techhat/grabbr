@@ -60,6 +60,13 @@ def load(opts):
         default=[],
         help='Location for grabbr organizer plugins',
     )
+    parser.add_argument(
+        '--salt-node',
+        dest='salt_node',
+        action='store',
+        default='minion',
+        help='master or minion, default minion',
+    )
 
     # Control
     parser.add_argument(
@@ -106,6 +113,13 @@ def load(opts):
         action='store',
         default=42424,
         help='The host port of the API',
+    )
+    parser.add_argument(
+        '--salt-events',
+        dest='salt_events',
+        action='store_true',
+        default=False,
+        help="Whether to fire events on Salt's event bus",
     )
 
     # Downloading

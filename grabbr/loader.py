@@ -11,7 +11,7 @@ def parser(opts, context, urls, dbclient):
     '''
     Load spider modules
     '''
-    master_opts = {}
+    master_opts = salt.config.master_config('/etc/salt/master')
     minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
         opts['parser_dir'],

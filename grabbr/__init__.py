@@ -25,6 +25,7 @@ import salt.config
 import grabbr.db
 import grabbr.api
 import grabbr.tools
+import grabbr.event
 import grabbr.config
 import grabbr.loader
 from grabbr.version import __version__
@@ -79,6 +80,8 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
 
     out = grabbr.tools.Output(opts)
     dbclient = grabbr.db.client(opts)
+
+    opts['salt_event'] = grabbr.event.bus(opts)
 
     if opts.get('version'):
         out.info(__version__)
