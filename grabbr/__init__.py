@@ -178,6 +178,8 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         'pid': pid,
         'api_addr': opts['api_addr'],
         'api_port': opts['api_port'],
+        'dbname': opts['dbname'],
+        'dbhost': opts['dbhost'],
     }
     with open(opts['meta_file'], 'w') as fh_:
         json.dump(metadata, fh_, indent=4)
