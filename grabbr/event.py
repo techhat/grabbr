@@ -23,8 +23,6 @@ def bus(opts):
         listen=False,
     )
 
-    client = salt.client.get_local_client(salt_opts['conf_file'])
-
     return event
 
 
