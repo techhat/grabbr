@@ -3,9 +3,7 @@
 Handle Salt event bus
 '''
 # 3rd party
-import salt.loader
 import salt.config
-import salt.client
 import salt.utils.event
 
 
