@@ -164,7 +164,11 @@ def pattern_wait(dbclient, url):
 
     sql = 'SELECT wait FROM pattern_wait WHERE %s ~ pattern LIMIT 1'
     cur.execute(sql, [url])
-    wait = cur.fetchone()[0]
+    try:
+        wait = cur.fetchone()[0]
+    except TypeError:
+        # No matches
+        return
 
     sql = "UPDATE dl_queue SET paused_until = now() + '%s seconds'"
     cur.execute(sql, [wait])
