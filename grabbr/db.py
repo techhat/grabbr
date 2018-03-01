@@ -143,3 +143,29 @@ def unpause(dbclient, opts, urls):
     dbclient.commit()
     out.info(ret)
     return ret
+
+
+def pattern_wait(dbclient, url):
+    '''
+    Check the URL against the ``pattern_wait`` table, using a regular
+    expression. If it matches, then all other URLs that match the pattern will
+    have their ``paused_until`` values updated to ``now() + {wait} seconds``.
+
+    Only the first match will be returned, so it's best to make patterns as
+    specific as possible. Normally a pattern will only be a domain name, so
+    this should not normally be a problem.
+
+    This function should be run before and after any download, such as
+    ``get_url()`` and ``status()``. Running before will help prevent other
+    agents from hitting the domain again at the same time, and running after
+    will keep all agents from hitting a domain again too fast.
+    '''
+    cur = dbclient.cursor()
+
+    sql = 'SELECT wait FROM pattern_wait WHERE %s ~ pattern LIMIT 1'
+    cur.execute(sql, [url])
+    wait = cur.fetchone()[0]
+
+    sql = "UPDATE dl_queue SET paused_until = now() + '%s seconds'"
+    cur.execute(sql, [wait])
+    dbclient.commit()

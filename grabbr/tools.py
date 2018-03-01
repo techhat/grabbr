@@ -95,6 +95,8 @@ def get_url(
     if referer:
         headers['referer'] = referer
 
+    grabbr.db.pattern_wait(dbclient, url)
+
     wait = 0
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
@@ -211,6 +213,8 @@ def get_url(
         else:
             content = cur.fetchone()[0]['content']
 
+    grabbr.db.pattern_wait(dbclient, url)
+
     if exists is False:
         if opts['random_wait'] is True:
             wait = opts.get('wait', 10)
@@ -277,6 +281,8 @@ def status(
 
     cur.execute('SELECT url FROM urls WHERE uuid = %s', [url_uuid])
     root_url = cur.fetchone()[0]
+
+    grabbr.db.pattern_wait(dbclient, media_url)
 
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
@@ -381,6 +387,8 @@ def status(
 
     cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [url_uuid])
     grabbr.event.fire('grabbr/{}/download'.format(opts['id']), {root_url: 'complete'}, opts)
+
+    grabbr.db.pattern_wait(dbclient, media_url)
 
     if not opts['daemon']:
         print()
