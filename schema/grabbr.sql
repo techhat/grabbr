@@ -39,3 +39,10 @@ CREATE TABLE active_dl (
     started_by text,
     primary key (uuid)
 );
+
+CREATE TABLE pattern_wait (
+    uuid uuid not null default uuid_generate_v4(),
+    pattern text,
+    wait int,
+    primary key (uuid)
+);
