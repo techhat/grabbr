@@ -37,6 +37,8 @@ def organize(url):
         content = req.text
     except requests.exceptions.MissingSchema as exc:
         return []
+    except requests.exceptions.ConnectionError:
+        return []
     except requests.exceptions.SSLError:
         out.warn('SSL Error with {}, trying again without verification'.format(url))
         req = requests.get(url, verify=False)
