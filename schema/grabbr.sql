@@ -24,7 +24,7 @@ CREATE TABLE referers (
 
 CREATE TABLE dl_queue (
     uuid uuid not null default uuid_generate_v4(),
-    url text
+    url text,
     dl_order integer NOT NULL default 1000000,
     paused boolean NOT NULL default FALSE,
     paused_until timestamp,
@@ -35,7 +35,7 @@ CREATE TABLE dl_queue (
 
 CREATE TABLE active_dl (
     uuid uuid not null default uuid_generate_v4(),
-    started_at timestamp,
+    started_at timestamp default now(),
     started_by text,
     primary key (uuid)
 );
