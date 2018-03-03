@@ -188,7 +188,10 @@ def get_url(
                 ''',
                 [
                     url_uuid,
-                    Json({'content': content})
+                    Json({
+                        'content': content.replace('\x00', ''),
+                        'status': req.status_code,
+                    })
                 ]
             )
             dbclient.commit()
