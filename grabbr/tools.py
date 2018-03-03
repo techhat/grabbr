@@ -101,6 +101,7 @@ def get_url(
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
         req = client.request(opts['method'], url, headers=headers, data=data)
+        req.raise_for_status()
         if opts.get('include_headers') is True:
             out.info(pprint.pformat(dict(req.headers)))
         content = req.text
@@ -165,13 +166,17 @@ def get_url(
         LIMIT 1
     ''', [url_uuid])
     if cur.rowcount < 1:
-        if opts['save_path']:
-            req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
-            content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
-        else:
-            req = client.request(opts['method'], url, headers=headers, data=data)
-            content = req.text
-            req_headers = req.headers
+        try:
+            if opts['save_path']:
+                req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
+                content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
+            else:
+                req = client.request(opts['method'], url, headers=headers, data=data)
+                content = req.text
+                req_headers = req.headers
+        except requests.exceptions.ConnectionError as exc:
+            out.error(exc)
+            return 0, ''
         if url not in opts['warned']:
             opts['warned'].append(url)
         if opts.get('include_headers') is True:
