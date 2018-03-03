@@ -138,6 +138,13 @@ def load(opts):
         help='Amount of time to wait between requests',
     )
     parser.add_argument(
+        '--domain-wait',
+        dest='domain_wait',
+        action='store',
+        default=0,
+        help='Amount of time to wait between requests, per domain',
+    )
+    parser.add_argument(
         '--random-wait',
         dest='random_wait',
         action='store_true',

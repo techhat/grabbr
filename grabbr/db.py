@@ -5,6 +5,7 @@ Database functions for Grabbr
 # Python
 import os
 import time
+import urllib
 import datetime
 
 # 3rd party
@@ -173,3 +174,56 @@ def pattern_wait(dbclient, url):
     sql = "UPDATE dl_queue SET paused_until = now() + '%s seconds'"
     cur.execute(sql, [wait])
     dbclient.commit()
+
+
+def check_domain_wait(dbclient, url):
+    '''
+    Check the URL against the ``domain_wait`` table. If the domain is in the
+    table, it will check the ``wait_until`` field. If that time has not yet
+    passed, return ``False``.
+
+    Before checking the ``domain_wait`` table for the domain, another query
+    will delete any entries from the table that are passed the ``wait_until``
+    time.
+
+    This function should be run before any download, such as ``get_url()`` and
+    ``status()``. Running before will help prevent other agents from hitting
+    the domain again at the same time, or too quickly afterwards.
+    '''
+    cur = dbclient.cursor()
+
+    sql = 'DELETE from domain_wait WHERE wait_until < now()'
+    cur.execute(sql)
+    dbclient.commit()
+
+    urlcomps = urllib.parse.urlparse(url)
+    domain = urlcomps[1]
+
+    sql = 'SELECT count(*) FROM domain_wait WHERE domain ~ %s'
+    cur.execute(sql, [domain])
+    try:
+        wait = cur.fetchone()[0]
+        if int(wait) > 0:
+            return False
+    except TypeError:
+        # No matches
+        return True
+
+
+def set_domain_wait(dbclient, opts, url):
+    '''
+    This function should be run before any download, such as ``get_url()`` and
+    ``status()``. Running before will help prevent other agents from hitting
+    the domain again at the same time, or too quickly afterwards.
+    '''
+    cur = dbclient.cursor()
+
+    urlcomps = urllib.parse.urlparse(url)
+    domain = urlcomps[1]
+
+    sql = '''
+        INSERT INTO domain_wait (domain, wait_until)
+        values (%s, now() + '%s seconds')
+        ON CONFLICT DO NOTHING
+    '''
+    cur.execute(sql, [domain, opts['domain_wait']])

@@ -46,3 +46,10 @@ CREATE TABLE pattern_wait (
     wait int,
     primary key (uuid)
 );
+
+CREATE TABLE domain_wait (
+    uuid uuid not null default uuid_generate_v4(),
+    domain text unique,
+    wait_until timestamp,
+    primary key (uuid)
+);
