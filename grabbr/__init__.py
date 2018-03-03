@@ -130,8 +130,10 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
                 if organize_engine is not None:
                     ret = organizers[organize_fun](item)
                     if ret:
-                        out.info(pprint.pformat(ret))
-                        #urls.append(item)
+                        if isinstance(ret, str):
+                            out.info(ret)
+                        else:
+                            out.info(pprint.pformat(ret))
                 else:
                     out.info(item)
         if not organize_fun:
