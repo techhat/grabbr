@@ -114,10 +114,10 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
     organize_engine = None
     organize_fun = None
     if opts.get('search_organize'):
-        organize_engine = opts['search_organize'][0]
-        organize_fun = '.'.join([organize_engine, 'organize'])
-        if organize_fun not in organizers:
-            out.error('The {} organizer is not available'.format(organize_engine))
+        for organize_engine in opts['search_organize']:
+            organize_fun = '.'.join([organize_engine, 'organize'])
+            if organize_fun not in organizers:
+                out.error('The {} organizer is not available'.format(organize_engine))
 
     if opts.get('search'):
         searches = grabbr.loader.search(opts, dbclient)
