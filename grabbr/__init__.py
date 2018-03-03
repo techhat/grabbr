@@ -108,7 +108,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         return
 
     # Keeps track of the URLs that we've already warned about this session
-    opts['warned'] = set()
+    opts['warned'] = []
 
     organizers = grabbr.loader.organize(opts, dbclient, context)
     organize_engine = None
