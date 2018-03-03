@@ -24,6 +24,7 @@ def organize(url):
     '''
     Decide whether a page has an JSON-LD recipe
     '''
+    out = grabbr.tools.Output(__opts__)
     cur = __dbclient__.cursor()
     insert_sql = '''
         INSERT INTO jsonld_domains (domain)
@@ -32,13 +33,18 @@ def organize(url):
     '''
 
     try:
-        url_uuid, content = grabbr.tools.get_url(
-            url, dbclient=__dbclient__, opts=__opts__, context=__context__
-        )
+        req = requests.get(url)
+        content = req.text
     except requests.exceptions.MissingSchema as exc:
         return []
+    except requests.exceptions.SSLError:
+        out.warn('SSL Error with {}, trying again without verification'.format(url))
+        req = requests.get(url, verify=False)
+        content = req.text
 
     soup = BeautifulSoup(content, 'html.parser')
+    if 'jsonld_domains' not in __context__:
+        __context__['jsonld_domains'] = []
     for tag in soup.find_all('script', attrs={'type': 'application/ld+json'}):
         for data in tag:
             try:
@@ -49,9 +55,11 @@ def organize(url):
                     return []
                 if script_type == 'recipe':
                     url_comps = urllib.parse.urlparse(url)
-                    netlock = url_comps[1].split(':')[0]
-                    cur.execute(insert_sql, [netlock])
+                    netloc = url_comps[1].split(':')[0]
+                    cur.execute(insert_sql, [netloc])
                     __dbclient__.commit()
+                    if netloc not in __context__['jsonld_domains']:
+                        __context__['jsonld_domains'].append(netloc)
                     grabbr.tools.queue_urls(url, __dbclient__, __opts__)
                     return 'Queueing for download: {}'.format(url)
             except json.decoder.JSONDecodeError as exc:
