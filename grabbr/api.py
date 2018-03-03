@@ -43,6 +43,10 @@ def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
             if 'show_opts' in data:
                 tmp_opts = opts.copy()
                 del tmp_opts['http_api']
+                del tmp_opts['salt_event']
+                for item in opts:
+                    if isinstance(item, set):
+                        tmp_opts[item] = list(temp_opts[item])
                 self.send(json.dumps(tmp_opts, indent=4), content_type='text/json')
                 return
             if 'show_context' in data:
