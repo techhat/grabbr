@@ -2,9 +2,9 @@
 Development
 ===========
 
-Plugins
+Parsers
 =======
-Plugins are stored in ``/srv/grabbr-plugins``. Each plugin _must_ have a
+Parsers are stored in ``/srv/grabbr/parsers``. Each parser _must_ have a
 function called ``func_map()`` which examines a URL and returns whether or not
 that module can handle it, and if so, which function to run for it. This
 function might look like:
@@ -130,3 +130,111 @@ First, a ``requests`` object called ``req`` is set up, which ``stream`` set to
 Then that object, along with the url, the filename, and the ``opts``, is passed
 to ``status``, which will perform the download, while generating updates, as
 one might expect from a program like ``wget``.
+
+
+Searchers
+=========
+Parsers are stored in ``/srv/grabbr/searchers``. Each parser _must_ have a
+function called ``search()`` which queries a search engine (or some other
+platform that has search support) and returns the results.
+
+To search, a user would use the ``--search`` flag:
+
+.. code-block:: bash
+
+    $ grabbr --search myexample 'chocolate cake'
+
+A basic ``search()`` function might look like:
+
+.. code-block:: python
+
+    def search():
+        '''
+        Search something
+        '''
+        query = __opts__['search'][1].replace(' ', '+')
+        url = 'http://example.com?q={}'.format(query)
+        req = requests.get(url)
+        soup = BeautifulSoup(req.text, 'html.parser')
+        urls = set()
+        for tag in soup.find_all('a'):
+            try:
+                link = tag.attrs['href']
+            except ValueError:
+                continue
+            urls.add(link)
+        return list(urls)
+
+All query data is stored in ``__opts__``. ``__opts__['search']`` contains at
+least two values: the name of the search engine being used, and any query data
+that is necessary. Normally only one value is used, but custom searchers can
+make use of as many as they need, so long as they know how to handle them.
+
+In this case, very basic URL encoding has been applied to the search data.
+A request is made against that search engine, and the data is processed by
+the BeautifulSoup library. In this example, all ``href`` s are returned.
+
+The final list of links must always be returned as a ``list``.
+
+Extra Search Options
+~~~~~~~~~~~~~~~~~~~~
+There are some extra options that are available for working with searchers.
+
+search_limit
+````````````
+It is expected that a search engine has a self-imposed limit of how many URLs
+to return. If that limit is configurable, a new value can be passed from the
+command line with the ``--search-limit`` option. This value will appear in
+``__opts__`` as ``search_limit``. The example above might make use of the
+following changes:
+
+.. code-block:: python
+
+        query = __opts__['search'][1].replace(' ', '+')
+        limit = __opts__.get('search_limit', 50)
+        url = 'http://example.com?q={}&num={}'.format(query, limit)
+        req = requests.get(url)
+
+
+search_organize
+```````````````
+Normally when a search is performed, the results will be returned to the user,
+with no further action taken. However, with a data mining tool, there is a
+good chance that further action is desired. The ``--search-orzanize`` option
+provides a map between search results, and the parsers that handle them.
+
+Organizers are explained in detail below.
+
+
+Organizers
+==========
+Organizers are stored in ``/srv/grabbr/organizers``. The point of an organizer
+is to look at a URL and sort or organize it in some manner. Many times, their
+task is simply to weed out URLs that don't contain desirable data, and then
+add the others to the queue to be downloaded and processed by a parser.
+
+For example, the ``jsonld_recipes`` organizer and parser work together, to
+accomplish one job: find and process URLs that contain recipes stored in the
+``application/ld+json`` format.
+
+For more information on this format, see https://jsonld.com/.
+
+Organizers _must_ have an organize function, which accepts a single argument
+of ``url``. Take a look at the following example:
+
+.. code-block:: python
+
+    import requests
+    import grabbr.tools
+    def organize(url):
+        '''
+        Organize a page depending on its content
+        '''
+        req = requests.get(url)
+        if 'desired data' in req.text:
+            grabbr.tools.queue_urls(url, __dbclient__, __opts__)
+
+An organizer doesn't need to be any more advanced than this. Note that
+``requests`` is used directly instead of Grabbr's own built-in tools, so that
+the URL doesn't get cached. Parsers don't like to download URLs unless
+``--force`` d to, so it's important not to cache them.

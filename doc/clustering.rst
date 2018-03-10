@@ -84,216 +84,59 @@ that is 7 days from now. The following time intervals may be specified:
 * weeks
 
 
-Using Salt
-==========
-Grabbr makes use of Salt's loader system in order to load plugins. It is only
-natural that other Salt functionality also be available for Grabbr.
+Waiting
+=======
+The more clients that try to hit a domain at once, the more of a chance of,
+intentionally or not, creating a denial of service attack against that domain.
+Grabbr has the ability to wait, not just on a per-agent, but on a per-cluster
+basis, to wait between attempts against remote servers.
 
-Grains
-------
-Certain pieces of information about Grabbr are available to Salt using the
-``grains`` module that ships with it.
+domain_wait
+-----------
+By default, there is no wait between any request. However, configuring the
+``domain_wait`` option will cause the database to log a domain name, and the
+next time that domain is available for retreival. This value is configured as
+a number of seconds.
 
-.. code-block:: bash
+.. code-block:: yaml
 
-    $ salt-call --local grains.item grabbr_agents
-    local:
-        ----------
-        grabbr_agents:
-            ----------
-            hydrogen:
-                ----------
-                api_addr:
-                    127.0.0.1
-                api_port:
-                    1138
-                id:
-                    carbon
-                pid:
-                    26040
-            helium:
-                ----------
-                api_addr:
-                    127.0.0.1
-                api_port:
-                    1139
-                id:
-                    nitrogen
-                pid:
-                    26167
-
-These data are used by the execution module to communicate with Grabbr.
-
-Execution Module
-----------------
-The ``grabbr`` execution module is used to control Grabbr on remote minions.
-An ``id_`` should be specified for most commands, but if it is not, Salt will
-try and guess what ``id_`` to use, based on actively running agents on the
-machine. If it is unable to do so, it will return an error.
-
-The following functions are available to the ``grabbr`` execution module:
-
-queue
-~~~~~
-Queue a URL for download. It will be processed up by the next available agent.
-It is not possible to specify which agent (``id_``) should handle it.
+    domain_wait: 5
 
 .. code-block:: bash
 
-    $ salt-call --local grabbr.queue http://example.com
+    $ grabbr --domain-wait 5
 
-Parameters:
+When ``domain_wait`` is configured, all domains will be subject to its rules.
+For more specific rules, see ``pattern_wait``.
 
-urls
-````
-Required ``list``.
+pattern_wait
+------------
+There may be situations where a more configurable wait period is needed. For
+instances, you may want URLs that are known to contain media to have a longer
+wait between retrievals. This is where ``pattern_wait`` comes into play.
 
-One or more URLs to queue.
+The type of pattern specified in ``pattern_wait`` is a regular expression.
+If you're not good with regular expressions, that okay. You don't need to use
+fancy wildcards or anything; just a domain name will work:
 
-force
-`````
-Optional ``bool``, default ``False``.
+.. code-block:: yaml
 
-Force a URL that has already been processed to be processed again.
+    example.com
 
-data
-````
-Optional ``dict``, default ``None``.
+``pattern_wait`` isn't a command line option, because it's intended to contain
+a larger and more permanent collection of patterns. Instead, a table in the
+database is maintained which contains these patterns, and their wait period
+(in seconds).
 
-Any additional data that may need to be passed to Grabbr. This is nor normally
-used.
+There are two fields in the ``pattern_wait`` table: ``pattern`` and ``wait``.
 
-start
-~~~~~
-Start a grabbr agent on the minion.
+.. code-block:: sql
 
-.. code-block:: bash
+    INSERT INTO pattern_wait (pattern, wait) VALUES ('example.com', 60)
 
-    $ salt-call --local grabbr.start id_=hydrogen api_port=1138
+Unlike ``domain_wait``, ``pattern_wait`` is applied to the entire URL, not
+just the domain, so the following patterns are also acceptable:
 
-Parameters:
-
-config_file
-```````````
-Optional ``str``, default ``/etc/grabbr/grabbr``.
-
-Location of the configuration file.
-
-run_dir
-```````
-Optional ``str``, default ``/var/run/grabbr``.
-
-Location of the ``run_dir``. This is where files such as ``pid`` and ``meta``
-are stored. The ``id_`` will be joined to this path.
-
-module_dir
-``````````
-Optional ``list``, default ``None``.
-
-An alternate location for Grabbr modules. If this is not specified here, or in
-the ``config_file`` then it will be set to a list containing a single item of
-``/srv/grabbr-plugins``. If it is specified here or in the ``config_file``
-then that location will not be implicitly included (meaning you need to specify
-it along with your other paths if you want to use it).
-
-id_
-```
-Optional ``str``, default ``None``.
-
-The ``id`` to start the Grabbr agent as.
-
-api_addr
-````````
-Optional ``str``, default ``127.0.0.1``.
-
-The host to bind the new Grabbr agent to. Because this is not a secure
-connection, it should not be set to anything other than ``127.0.0.1``.
-
-api_port
-````````
-Optional ``int``, default ``424242``.
-
-The port to bind the new Grabbr agent to. This should be specified for each new
-Grabbr agent, unless already configured in the ``config_file``.
-
-
-stop
-~~~~
-Stop the grabbr agent on the minion.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.stop hydrogen
-
-Parameters:
-
-id_
-```
-Optional ``str``, default ``None``.
-
-The ``id`` of the Grabbr agent to stop.
-
-hard_stop
-~~~~~~~~~
-Stop the grabbr agent on the minion.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.hard_stop hydrogen
-
-Parameters:
-
-id_
-```
-Optional ``str``, default ``None``.
-
-The ``id`` of the Grabbr agent to hard stop.
-
-abort
-~~~~~
-Abort the grabbr agent on the minion.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.abort hydrogen
-
-Parameters:
-
-id_
-```
-Optional ``str``, default ``None``.
-
-The ``id`` of the Grabbr agent to abort.
-
-show_opts
-~~~~~~~~~
-List the opts for the Grabbr agent.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.show_opts hydrogen
-
-Parameters:
-
-id_
-```
-Optional ``str``, default ``None``.
-
-The ``id`` of the Grabbr agent to abort.
-
-list_queue
-~~~~~~~~~~
-List the contents of the download queue.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.list_queue 
-
-active_downloads
-~~~~~~~~~~
-List current active downloads.
-
-.. code-block:: bash
-
-    $ salt-call --local grabbr.active_downloads
-
+    * ``mp4$``
+    * ``example\.com.*\.mp4``
+    * ``https.*mp4``

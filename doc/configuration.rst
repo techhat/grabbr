@@ -115,12 +115,12 @@ Default: /var/run/grabbr/pid
 
 Location for the PID file.
 
-module_dir
+parser_dir
 ~~~~~~~~~~
-CLI Option: ``--module-dir``
-Default: ``[/srv/grabbr-plugins]``
+CLI Option: ``--parser-dir``
+Default: ``[/srv/grabbr/parsers]``
 
-Location for grabbr plugins.
+Location for grabbr parsers.
 
 daemon
 ~~~~~~
