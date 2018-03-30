@@ -1,9 +1,9 @@
-=================
-Grabbr Web Spider
-=================
+==========
+Web Flayer
+==========
 
-Grabbr is a web spider that makes use of the Salt loader system to determine
-which sites to process, and how. Think of it as wget with plugins.
+Web Flayer is a data mining tool that makes use of the Salt loader system to
+determine which sites to process, and how. Think of it as wget with plugins.
 
 
 Requirements
@@ -17,4 +17,5 @@ The following python libraries are required:
 * salt
 * termcolor
 
-Grabbr also requires PostgreSQL. Schema can be found in the schema directory.
+Web Flayer also requires PostgreSQL. Schema can be found in the schema
+directory.
