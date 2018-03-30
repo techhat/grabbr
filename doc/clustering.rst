@@ -4,10 +4,10 @@ Clustering
 
 Introduction
 ============
-There are some techniques that can be used to enable multiple Grabbr nodes to
-work together using a single database.
+There are some techniques that can be used to enable multiple Web Flayer nodes
+to work together using a single database.
 
-The database is node-agnostic, to a degree. When an instance of Grabbr pops a
+The database is node-agnostic, to a degree. When an instance of ``flay`` pops a
 URL from the download queue, it first places a lock on the item to ensure that
 no other nodes try to process it. This lock contains the name of the node.
 The node then performs any queue-specific processing (such as checking the
@@ -21,12 +21,12 @@ node.
 
 Multiple Agents
 ===============
-Grabbr supports running multiple agents on the same machine, and across
+Web Flayer supports running multiple agents on the same machine, and across
 multiple machines.
 
-By default Grabbr will run under an ``id`` of ``unknown``. While not technically 
-required, it is highly recommended that you use a different ``id`` for each
-agent that connects to the database.
+By default Web Flayer will run under an ``id`` of ``unknown``. While not
+technically required, it is highly recommended that you use a different ``id``
+for each agent that connects to the database.
 
 The agent is normally set inside the configuration file:
 
@@ -34,33 +34,33 @@ The agent is normally set inside the configuration file:
 
     id: myagent
 
-When starting Grabbr as a daemon, a different configuration file may be
+When starting Web Flayer as a daemon, a different configuration file may be
 specified:
 
 .. code-block:: bash
 
-    $ grabbr --daemon --config-file /etc/grabbr/custom
+    $ flay --daemon --config-file /etc/flay/custom
 
 Multiple configuration files may be set up, for multiple agents. However, it
 is likely that the same configuration will be desired for each agent. In this
 case, a single configuration file may be used, with a different ``id`` in it.
 
-Keep in mind that when running as a daemon, Grabbr sets up a local web server
-for management purposes. When running multiple daemons on the same machine,
-each agent must use a different port.
+Keep in mind that when running as a daemon, Web Flayer sets up a local web
+server for management purposes. When running multiple daemons on the same
+machine, each agent must use a different port.
 
 .. code-block:: bash
 
-    $ grabbr --daemon --id hydrogen --api-port 1138
-    $ grabbr --daemon --id helium --api-port 1139
-    $ grabbr --daemon --id lithium --api-port 1140
+    $ flay --daemon --id hydrogen --api-port 1138
+    $ flay --daemon --id helium --api-port 1139
+    $ flay --daemon --id lithium --api-port 1140
 
 When multiple agents are running on the same machine, management commands (such
 as ``stop``) must also include the ``id`` for individual agents:
 
 .. code-block:: bash
 
-    $ grabbr --stop --id hydrogen
+    $ flay --stop --id hydrogen
 
 
 Refresh Interval
@@ -71,7 +71,7 @@ an interval must be done in JSON:
 
 .. code-block:: bash
 
-    $ grabbr --refresh-interval '{"days": 7}' http://example.com/path
+    $ flay --refresh-interval '{"days": 7}' http://example.com/path
 
 The above example will queue the URL for immediate retrieval. When it is
 processed, it will be added back to the queue, with a ``paused_until`` value
@@ -88,8 +88,8 @@ Waiting
 =======
 The more clients that try to hit a domain at once, the more of a chance of,
 intentionally or not, creating a denial of service attack against that domain.
-Grabbr has the ability to wait, not just on a per-agent, but on a per-cluster
-basis, to wait between attempts against remote servers.
+Web Flayer has the ability to wait, not just on a per-agent, but on a
+per-cluster basis, to wait between attempts against remote servers.
 
 domain_wait
 -----------
@@ -104,7 +104,7 @@ a number of seconds.
 
 .. code-block:: bash
 
-    $ grabbr --domain-wait 5
+    $ flay --domain-wait 5
 
 When ``domain_wait`` is configured, all domains will be subject to its rules.
 For more specific rules, see ``pattern_wait``.

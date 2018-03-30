@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 '''
-Grabbr organizer module for JSON-LD
+Web Flayer organizer module for JSON-LD
 '''
 import json
 from bs4 import BeautifulSoup
-import grabbr.tools
+import flayer.tools
 
 
 def organize(url):
     '''
     Decide whether a page is using JSON-LD
     '''
-    url_uuid, content = grabbr.tools.get_url(
+    url_uuid, content = flayer.tools.get_url(
         url, dbclient=__dbclient__, opts=__opts__, context=__context__
     )
 

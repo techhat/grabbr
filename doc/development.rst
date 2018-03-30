@@ -4,7 +4,7 @@ Development
 
 Parsers
 =======
-Parsers are stored in ``/srv/grabbr/parsers``. Each parser _must_ have a
+Parsers are stored in ``/srv/flayer/parsers``. Each parser _must_ have a
 function called ``func_map()`` which examines a URL and returns whether or not
 that module can handle it, and if so, which function to run for it. This
 function might look like:
@@ -38,10 +38,10 @@ look like:
             content = ''
         return url_id, url, content
 
-The above function would look at the URL and decide whether it looks like a page
-is expected to be dynamic. If so, it sets the ``url_id`` to ``0`` and the
-``content`` to an empty string. When Grabbr later looks at the ``url_id`` and
-sees that it is already set to ``0``, it will skip caching the data.
+The above function would look at the URL and decide whether it looks like a
+page is expected to be dynamic. If so, it sets the ``url_id`` to ``0`` and the
+``content`` to an empty string. When Web Flayer later looks at the ``url_id``
+and sees that it is already set to ``0``, it will skip caching the data.
 
 This function must always accept ``url_id`` and ``url``.
 
@@ -52,7 +52,7 @@ the ``func_map()`` function as described above.
 These (and all non-dunder) functions have the following built-in variables
 available to them:
 
-* ``__opts__``: A reference to the Grabbr configuration
+* ``__opts__``: A reference to the Web Flayer configuration
 * ``__urls__``: A reference to the in-memory URL queue (but not the database queue)
 * ``__dbclient__``: A reference to the database client object
 
@@ -78,7 +78,7 @@ Consider the following function:
         title = url.split('?')[0].split('/')[-1]
         file_name = '{}/{}'.format(cache_path, title)
         req = requests.get(url, stream=True, params={'action': 'raw'})
-        grabbr.tools.status(req, url, file_name)
+        flayer.tools.status(req, url, file_name)
 
 In this function, the following will happen:
 
@@ -86,25 +86,26 @@ In this function, the following will happen:
 * Extract the ``title`` of the page from the URL.
 * Generate the output file_name using the ``cache_path`` and the ``title``.
 * Set up a ``requests`` object to download the raw version of the URL.
-* Use ``grabbr.tools.status`` to download the URL. This function is discussed below.
+* Use ``flayer.tools.status`` to download the URL. This function is discussed below.
 
 The above function only makes use of the ``url``, and only because it needs to
 extract information from that URL. Because the ``content`` of that URL is also
 passed in, you may only need your function to process that. The ``url_id`` is
-provided in case you need to refer to the URL's location in Grabbr's database.
+provided in case you need to refer to the URL's location in Web Flayer's
+database.
 
 It is common for data mining tools to collect links while processing a page.
 If a function finds more URLs that need to be processed, it may append them 
 directly to the ``__urls__`` list, and they will be processed in turn. However,
 it is better to add then directly to the database by calling ``queue_urls``
-from the ``grabbr.tools`` module:
+from the ``flayer.tools`` module:
 
 .. code-block:: python
 
-    import grabbr.tools
-    grabbr.tools.queue_urls(new_urls, __dbclient__, __opts__)
+    import flayer.tools
+    flayer.tools.queue_urls(new_urls, __dbclient__, __opts__)
 
-The ``grabbr.tools.status`` function is available for URLs that point to a file
+The ``flayer.tools.status`` function is available for URLs that point to a file
 that needs to be downloaded to disk. For example, this could be a chunk of
 JSON, an image, or a larger file such as a tarball or a video. This function
 will not only download that file, but also provide status on the download.
@@ -120,9 +121,9 @@ Consider the following block of code:
 .. code-block:: python
 
     import requests
-    import grabbr.tools
+    import flayer.tools
     req = requests.get(url, stream=True)
-    grabbr.tools.status(req, url, file_name, opts=__opts__)
+    flayer.tools.status(req, url, file_name, opts=__opts__)
 
 First, a ``requests`` object called ``req`` is set up, which ``stream`` set to
 ``True``. Please note that the ``status`` function requires this to be set.
@@ -134,7 +135,7 @@ one might expect from a program like ``wget``.
 
 Searchers
 =========
-Parsers are stored in ``/srv/grabbr/searchers``. Each parser _must_ have a
+Parsers are stored in ``/srv/flayer/searchers``. Each parser _must_ have a
 function called ``search()`` which queries a search engine (or some other
 platform that has search support) and returns the results.
 
@@ -142,7 +143,7 @@ To search, a user would use the ``--search`` flag:
 
 .. code-block:: bash
 
-    $ grabbr --search myexample 'chocolate cake'
+    $ flayer --search myexample 'chocolate cake'
 
 A basic ``search()`` function might look like:
 
@@ -208,7 +209,7 @@ Organizers are explained in detail below.
 
 Organizers
 ==========
-Organizers are stored in ``/srv/grabbr/organizers``. The point of an organizer
+Organizers are stored in ``/srv/flayer/organizers``. The point of an organizer
 is to look at a URL and sort or organize it in some manner. Many times, their
 task is simply to weed out URLs that don't contain desirable data, and then
 add the others to the queue to be downloaded and processed by a parser.
@@ -225,16 +226,16 @@ of ``url``. Take a look at the following example:
 .. code-block:: python
 
     import requests
-    import grabbr.tools
+    import flayer.tools
     def organize(url):
         '''
         Organize a page depending on its content
         '''
         req = requests.get(url)
         if 'desired data' in req.text:
-            grabbr.tools.queue_urls(url, __dbclient__, __opts__)
+            flayer.tools.queue_urls(url, __dbclient__, __opts__)
 
 An organizer doesn't need to be any more advanced than this. Note that
-``requests`` is used directly instead of Grabbr's own built-in tools, so that
-the URL doesn't get cached. Parsers don't like to download URLs unless
+``requests`` is used directly instead of Web Flayer's own built-in tools, so
+that the URL doesn't get cached. Parsers don't like to download URLs unless
 ``--force`` d to, so it's important not to cache them.

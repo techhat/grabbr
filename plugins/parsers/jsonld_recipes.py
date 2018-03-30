@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Grabbr module for JSON-LD Recipes
+Web Flayer module for JSON-LD Recipes
 
 In order to use this plugin, a ``jsonld_domains`` table needs to be created:
 
@@ -11,7 +11,7 @@ In order to use this plugin, a ``jsonld_domains`` table needs to be created:
 import os
 import json
 import html
-import grabbr.tools
+import flayer.tools
 from bs4 import BeautifulSoup
 
 
@@ -55,7 +55,7 @@ def parse_list(list_element):
     urls = []
     for item in list_element:
         urls.append(item['url'])
-    grabbr.tools.queue_urls(urls, __dbclient__, __opts__)
+    flayer.tools.queue_urls(urls, __dbclient__, __opts__)
 
 
 def parse_recipe(url, content, recipe_dict):

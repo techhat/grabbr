@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Database functions for Grabbr
+Database functions for Web Flayer
 '''
 # Python
 import os
@@ -13,7 +13,7 @@ import psycopg2
 import psycopg2.extras
 
 # Internal
-import grabbr.tools
+import flayer.tools
 
 
 def client(config):
@@ -22,7 +22,7 @@ def client(config):
     '''
     dbclient = psycopg2.connect(
         'dbname={0} user={1} password={2} host={3}'.format(
-            config.get('dbname', 'grabbr'),
+            config.get('dbname', 'flayer'),
             config.get('dbuser', 'postgres'),
             config.get('dbpass', ''),
             config.get('dbhost', 'localhost'),
@@ -91,7 +91,7 @@ def list_queue(dbclient, opts):
     List all queued URLs in the database
     '''
     ret = []
-    out = grabbr.tools.Output(opts)
+    out = flayer.tools.Output(opts)
 
     cur = dbclient.cursor()
     cur.execute('SELECT url, paused FROM dl_queue')
@@ -117,7 +117,7 @@ def pause(dbclient, opts, urls):
     Pause URL(s) in the download queue
     '''
     ret = {'urls': urls, 'number_paused': len(urls)}
-    out = grabbr.tools.Output(opts)
+    out = flayer.tools.Output(opts)
 
     cur = dbclient.cursor()
 
@@ -134,7 +134,7 @@ def unpause(dbclient, opts, urls):
     Unpause URL(s) in the download queue
     '''
     ret = {'urls': urls, 'number_unpaused': len(urls)}
-    out = grabbr.tools.Output(opts)
+    out = flayer.tools.Output(opts)
 
     cur = dbclient.cursor()
 

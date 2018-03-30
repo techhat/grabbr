@@ -4,7 +4,7 @@ Getting Started
 
 Configuration
 =============
-The configuration file is located at ``/etc/grabbr/grabbr``, and is in YAML
+The configuration file is located at ``/etc/flayer/flayer``, and is in YAML
 format. The following settings are required:
 
 .. code-block:: yaml
@@ -18,9 +18,9 @@ The following settings are also configurable:
 
 .. code-block:: yaml
 
-    pid_file: /var/run/grabbr/pid
+    pid_file: /var/run/flayer/pid
     parser_dir:
-      - /srv/grabbr/parsers
+      - /srv/flayer/parsers
     force: False
     random_wait: False
     headers:

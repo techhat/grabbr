@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Grabbr module for wikipedia
+Web Flayer module for wikipedia
 
 Grabs the raw data from a wikipedia page and dump it to a file, with the page's
 title as the filename.
 
-``/etc/grabbr/grabbr`` should have a ``wikipedia_cache_path`` specified to
+``/etc/flayer/flayer`` should have a ``wikipedia_cache_path`` specified to
 download files to. However, if that is not specified, the file will be stored
 in the current working directory.
 
@@ -16,7 +16,7 @@ If you like Wikipedia, please consider donating to help keep it alive. You can
 donate at https://donate.wikimedia.org/.
 '''
 import requests
-import grabbr.tools
+import flayer.tools
 
 
 def func_map(url):
@@ -36,7 +36,7 @@ def wikipedia_raw(url_uuid, url, content):
     title = url.split('?')[0].split('/')[-1]
     file_name = '{}/{}'.format(cache_path, title)
     req = requests.get(url, stream=True, params={'action': 'raw'})
-    grabbr.tools.status(
+    flayer.tools.status(
         req,
         url,
         url_uuid,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Basic functions for Grabbr
+Basic functions for Web Flayer
 '''
 # 3rd party
 from salt.loader import LazyLoader
@@ -16,7 +16,7 @@ def parser(opts, context, urls, dbclient):
     return LazyLoader(
         opts['parser_dir'],
         minion_opts,
-        tag=u'grabbr/parser',
+        tag=u'flayer/parser',
         pack={
             u'__master_opts__': master_opts,
             u'__minion_opts__': minion_opts,
@@ -35,7 +35,7 @@ def search(opts, dbclient):
     return LazyLoader(
         opts['search_dir'],
         {},
-        tag=u'grabbr/search',
+        tag=u'flayer/search',
         pack={
             u'__opts__': opts,
             u'__dbclient__': dbclient,
@@ -50,7 +50,7 @@ def organize(opts, dbclient, context):
     return LazyLoader(
         opts['organize_dir'],
         {},
-        tag=u'grabbr/organize',
+        tag=u'flayer/organize',
         pack={
             u'__opts__': opts,
             u'__dbclient__': dbclient,

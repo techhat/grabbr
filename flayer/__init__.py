@@ -2,7 +2,7 @@
 # pylint: disable=too-many-nested-blocks,too-many-branches
 
 '''
-Basic functions for Grabbr
+Basic functions for Web Flayer
 '''
 # Python
 import os
@@ -22,20 +22,20 @@ from salt.loader import LazyLoader
 import salt.config
 
 # Internal
-import grabbr.db
-import grabbr.api
-import grabbr.tools
-import grabbr.event
-import grabbr.config
-import grabbr.loader
-from grabbr.version import __version__
+import flayer.db
+import flayer.api
+import flayer.tools
+import flayer.event
+import flayer.config
+import flayer.loader
+from flayer.version import __version__
 
 
 def daemonize(opts, context):
     '''
     Spawn a new process
     '''
-    out = grabbr.tools.Output(opts)
+    out = flayer.tools.Output(opts)
     try:
         pid = os.fork()
         if pid > 0:
@@ -58,7 +58,7 @@ def daemonize(opts, context):
         out.error('fork #2 failed: {} ({})'.format(exc.errno, exc))
         sys.exit(1)
 
-    grabbr.api.run(opts, context)
+    flayer.api.run(opts, context)
 
 
 def run(run_opts=None):  # pylint: disable=too-many-return-statements
@@ -68,7 +68,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
     if run_opts is None:
         run_opts = {}
 
-    opts, urls, parser = grabbr.config.load(run_opts)
+    opts, urls, parser = flayer.config.load(run_opts)
     context = {}
 
     if opts.get('stop') or opts.get('hard_stop') or opts.get('abort'):
@@ -78,10 +78,10 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
     if opts['daemon']:
         daemonize(opts, context)
 
-    out = grabbr.tools.Output(opts)
-    dbclient = grabbr.db.client(opts)
+    out = flayer.tools.Output(opts)
+    dbclient = flayer.db.client(opts)
 
-    opts['salt_event'] = grabbr.event.bus(opts)
+    opts['salt_event'] = flayer.event.bus(opts)
 
     if opts.get('version'):
         out.info(__version__)
@@ -96,21 +96,21 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         return
 
     if opts.get('list_queue', False) is True:
-        grabbr.db.list_queue(dbclient, opts)
+        flayer.db.list_queue(dbclient, opts)
         return
 
     if opts.get('pause'):
-        grabbr.db.pause(dbclient, opts, opts['pause'])
+        flayer.db.pause(dbclient, opts, opts['pause'])
         return
 
     if opts.get('unpause'):
-        grabbr.db.unpause(dbclient, opts, opts['unpause'])
+        flayer.db.unpause(dbclient, opts, opts['unpause'])
         return
 
     # Keeps track of the URLs that we've already warned about this session
     opts['warned'] = []
 
-    organizers = grabbr.loader.organize(opts, dbclient, context)
+    organizers = flayer.loader.organize(opts, dbclient, context)
     organize_engine = None
     organize_fun = None
     if opts.get('search_organize'):
@@ -120,7 +120,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
                 out.error('The {} organizer is not available'.format(organize_engine))
 
     if opts.get('search'):
-        searches = grabbr.loader.search(opts, dbclient)
+        searches = flayer.loader.search(opts, dbclient)
         engine = opts['search'][0]
         fun = '.'.join([engine, 'search'])
         if fun not in searches:
@@ -141,27 +141,27 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
 
     if opts.get('input_file'):
         if opts['input_file'] == '-':
-            grabbr.tools.queue_urls(sys.stdin.readlines(), dbclient, opts)
+            flayer.tools.queue_urls(sys.stdin.readlines(), dbclient, opts)
         else:
             try:
                 with open(opts['input_file'], 'r') as ifh:
                     links = ifh.read().splitlines()
-                grabbr.tools.queue_urls(links, dbclient, opts)
+                flayer.tools.queue_urls(links, dbclient, opts)
             except OSError as exc:
                 out.error('There was an error reading {}: {}'.format(opts['input_file'], exc))
 
     if opts.get('queue', False) is True:
-        count = grabbr.tools.queue_urls(urls, dbclient, opts)
+        count = flayer.tools.queue_urls(urls, dbclient, opts)
         out.info('Added item(s) to the queue, {} items now queued'.format(count))
         return
 
-    parsers = grabbr.loader.parser(opts, context, urls, dbclient)
+    parsers = flayer.loader.parser(opts, context, urls, dbclient)
 
     if opts['reprocess']:
-        urls = grabbr.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
+        urls = flayer.tools.reprocess_urls(urls, opts['reprocess'], dbclient)
 
     if not urls and opts['use_queue'] is True:
-        grabbr.db.pop_dl_queue(dbclient, urls, opts)
+        flayer.db.pop_dl_queue(dbclient, urls, opts)
 
     if not urls:
         if not opts['daemon'] and not organize_fun:
@@ -206,9 +206,9 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
                     pass
                 break
             if len(urls) < 1 and opts['use_queue'] is True:
-                grabbr.db.pop_dl_queue(dbclient, urls, opts)
+                flayer.db.pop_dl_queue(dbclient, urls, opts)
             if opts['urls']:
-                grabbr.tools.queue_urls(opts['urls'], dbclient, opts)
+                flayer.tools.queue_urls(opts['urls'], dbclient, opts)
                 opts['urls'] = []
             try:
                 url = urls.pop(0)
@@ -228,7 +228,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
                 url_uuid, url, content = parsers[mod](url)
             if url_uuid is None:
                 try:
-                    url_uuid, content = grabbr.tools.get_url(
+                    url_uuid, content = flayer.tools.get_url(
                         url, dbclient=dbclient, opts=opts, context=context
                     )
                 except requests.exceptions.MissingSchema as exc:
@@ -237,19 +237,19 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
             # Display the source of the URL content
             if opts.get('source', False) is True:
                 out.info(content)
-            hrefs = grabbr.tools.parse_links(url, content, level, opts)
+            hrefs = flayer.tools.parse_links(url, content, level, opts)
             level += 1
             if opts.get('links', False) is True:
                 out.info('\n'.join(hrefs))
             if opts.get('queuelinks', False) is True:
-                grabbr.tools.queue_urls(hrefs, dbclient, opts)
+                flayer.tools.queue_urls(hrefs, dbclient, opts)
             if opts.get('use_parsers', True) is True:
                 try:
-                    grabbr.tools.process_url(url_uuid, url, content, parsers)
+                    flayer.tools.process_url(url_uuid, url, content, parsers)
                 except TypeError:
                     out.warn('No matching parsers were found')
             if opts.get('queue_re'):
-                grabbr.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
+                flayer.tools.queue_regexp(hrefs, opts['queue_re'], dbclient, opts)
             if opts.get('single') is True:
                 break
         try:
@@ -268,23 +268,23 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
                     continue
                 if 'python' in process.cmdline()[0]:
                     cmdline = ' '.join(process.cmdline())
-                    if 'grabbr' in cmdline:
+                    if 'flay' in cmdline:
                         if os.getpid() != process.pid:
                             verified_running = True
                             if opts['daemon']:
                                 out.error(
-                                    'grabbr already running, or improperly stopped',
+                                    'flay already running, or improperly stopped',
                                     force=True,
                                 )
                                 sys.exit(1)
                             else:
-                                out.info('grabbr already running, adding item(s) to the queue')
+                                out.info('flay already running, adding item(s) to the queue')
             except IndexError:
                 pass
         if verified_running is False:
             out.error(
-                'grabbr not found in process list, check {}'.format(
+                'flay not found in process list, check {}'.format(
                     opts['stop_file']
                 ), force=True
             )
-        grabbr.tools.queue_urls(urls, dbclient, opts)
+        flayer.tools.queue_urls(urls, dbclient, opts)

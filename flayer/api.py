@@ -10,25 +10,25 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 
 # Internal
-import grabbr.db
+import flayer.db
 
 
-class GrabbrHTTPServer(ThreadingMixIn, HTTPServer):
+class FlayerHTTPServer(ThreadingMixIn, HTTPServer):
     '''
     Threaded HTTP Server
     '''
 
-def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
+def MakeFlayerHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
     '''
     Return an HTTP class which can handle opts being passed in
     '''
-    class GrabbrHTTPRequestHandler(BaseHTTPRequestHandler):
+    class FlayerHTTPRequestHandler(BaseHTTPRequestHandler):
         '''
         Process arguments
         '''
         def __init__(self, *args, **kwargs):
-            self.dbclient = grabbr.db.client(opts)
-            super(GrabbrHTTPRequestHandler, self).__init__(*args, **kwargs)
+            self.dbclient = flayer.db.client(opts)
+            super(FlayerHTTPRequestHandler, self).__init__(*args, **kwargs)
 
         def do_GET(self):  # pylint: disable=invalid-name
             '''
@@ -37,7 +37,7 @@ def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
             qstr = self.path.lstrip('/?')
             data = urllib.parse.parse_qs(qstr)
             if 'list_queue' in data:
-                queue = grabbr.db.list_queue(self.dbclient, opts)
+                queue = flayer.db.list_queue(self.dbclient, opts)
                 self.send(json.dumps(queue))
                 return
             if 'show_opts' in data:
@@ -84,7 +84,7 @@ def MakeGrabbrHTTPRequestHandler(opts, context):  # pylint: disable=invalid-name
             '''
             return
 
-    return GrabbrHTTPRequestHandler
+    return FlayerHTTPRequestHandler
 
 
 def run(opts, context):
@@ -95,10 +95,10 @@ def run(opts, context):
         opts.get('api_addr', '127.0.0.1'),
         int(opts.get('api_port', 42424)),
     ))
-    grabbr_handler = MakeGrabbrHTTPRequestHandler(opts, context)
-    httpd = GrabbrHTTPServer(
+    flayer_handler = MakeFlayerHTTPRequestHandler(opts, context)
+    httpd = FlayerHTTPServer(
         server_address,
-        grabbr_handler,
+        flayer_handler,
     )
     opts['http_api'] = httpd
     thread = threading.Thread(target=httpd.serve_forever)

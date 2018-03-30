@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Tools for Grabbr
+Tools for Web Flayer
 '''
 # Python
 import os
@@ -19,7 +19,7 @@ from psycopg2.extras import Json
 from bs4 import BeautifulSoup
 
 # Internal
-import grabbr.event
+import flayer.event
 
 
 class Output(object):
@@ -95,11 +95,11 @@ def get_url(
     if referer:
         headers['referer'] = referer
 
-    if grabbr.db.check_domain_wait(dbclient, url) is False:
+    if flayer.db.check_domain_wait(dbclient, url) is False:
         # We need to put this URL back into the queue
         queue_urls([url], dbclient, opts)
-    grabbr.db.pattern_wait(dbclient, url)
-    grabbr.db.set_domain_wait(dbclient, opts, url)
+    flayer.db.pattern_wait(dbclient, url)
+    flayer.db.set_domain_wait(dbclient, opts, url)
 
     wait = 0
     if opts.get('no_db_cache') is True:
@@ -229,8 +229,8 @@ def get_url(
         else:
             content = cur.fetchone()[0]['content']
 
-    grabbr.db.pattern_wait(dbclient, url)
-    grabbr.db.set_domain_wait(dbclient, opts, url)
+    flayer.db.pattern_wait(dbclient, url)
+    flayer.db.set_domain_wait(dbclient, opts, url)
 
     if exists is False:
         if opts['random_wait'] is True:
@@ -299,8 +299,8 @@ def status(
     cur.execute('SELECT url FROM urls WHERE uuid = %s', [url_uuid])
     root_url = cur.fetchone()[0]
 
-    grabbr.db.pattern_wait(dbclient, media_url)
-    grabbr.db.set_domain_wait(dbclient, opts, media_url)
+    flayer.db.pattern_wait(dbclient, media_url)
+    flayer.db.set_domain_wait(dbclient, opts, media_url)
 
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
@@ -334,7 +334,7 @@ def status(
         'time_left': '',
         'kbsec': 0,
     }
-    grabbr.event.fire('grabbr/{}/download'.format(opts['id']), {root_url: 'started'}, opts)
+    flayer.event.fire('flayer/{}/download'.format(opts['id']), {root_url: 'started'}, opts)
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
         for block in req.iter_content(buffer_size):
@@ -404,10 +404,10 @@ def status(
         content = None
 
     cur.execute('DELETE FROM active_dl WHERE url_uuid = %s', [url_uuid])
-    grabbr.event.fire('grabbr/{}/download'.format(opts['id']), {root_url: 'complete'}, opts)
+    flayer.event.fire('flayer/{}/download'.format(opts['id']), {root_url: 'complete'}, opts)
 
-    grabbr.db.pattern_wait(dbclient, media_url)
-    grabbr.db.set_domain_wait(dbclient, opts, media_url)
+    flayer.db.pattern_wait(dbclient, media_url)
+    flayer.db.set_domain_wait(dbclient, opts, media_url)
 
     if not opts['daemon']:
         print()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Salt execution module for Grabbr
+Salt execution module for Web Flayer
 '''
 # python
 import os
@@ -23,7 +23,7 @@ def _query(decode=False, id_=None, **params):
     '''
     Send a command to the API
     '''
-    agents = __grains__['grabbr_agents']
+    agents = __grains__['flayer_agents']
 
     if id_ is None:
         if 'unknown' in agents:
@@ -32,7 +32,7 @@ def _query(decode=False, id_=None, **params):
             if len(list(agents)) == 1:
                 id_ = list(agents)[0]
             else:
-                raise CommandExecutionError('A valid Grabbr id_ was not specified')
+                raise CommandExecutionError('A valid Web Flayer id_ was not specified')
     elif id_ not in agents:
         raise CommandExecutionError('{} is not running'.format(id_))
 
@@ -59,15 +59,15 @@ def queue(urls, force=False, data=None):
 
 
 def start(
-        config_file='/etc/grabbr/grabbr',
-        run_dir='/var/run/grabbr',
+        config_file='/etc/flayer/flayer',
+        run_dir='/var/run/flayer',
         parser_dir=None,
         id_=None,
         api_addr='127.0.0.1',
         api_port=42424,
     ):
     '''
-    Start the Grabbr daemon
+    Start the Web Flayer daemon
     '''
     if not os.path.exists(config_file):
         raise Exception('Config file ({}) not found'.format(config_file))
@@ -76,7 +76,7 @@ def start(
         raise Exception('PID dir ({}) not found'.format(os.path.dirname(pid_file)))
 
     args = (
-        'grabbr', '--daemon',
+        'flayer', '--daemon',
         '--config-file', config_file,
         '--run-dir', run_dir,
     )
@@ -106,21 +106,21 @@ def start(
 
 def stop(id_=None):
     '''
-    Stop the Grabbr daemon
+    Stop the Web Flayer daemon
     '''
     _query(stop=True, id_=id_)
 
 
 def hard_stop(id_=None):
     '''
-    Hard stop the Grabbr daemon
+    Hard stop the Web Flayer daemon
     '''
     _query(hard_stop=True, id_=id_)
 
 
 def abort(id_=None):
     '''
-    Abort the Grabbr daemon
+    Abort the Web Flayer daemon
     '''
     _query(abort=True, id_=id_)
 

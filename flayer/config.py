@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Config for Grabbr
+Config for Web Flayer
 '''
 # Python
 import os
@@ -10,7 +10,7 @@ import argparse
 import yaml
 
 # Internal
-from grabbr.version import __version__
+from flayer.version import __version__
 
 
 def load(opts):
@@ -29,7 +29,7 @@ def load(opts):
         '--config-file',
         dest='config_file',
         action='store',
-        default='/etc/grabbr/grabbr',
+        default='/etc/flayer/flayer',
         help='Default location for the config file',
     )
     parser.add_argument(
@@ -44,21 +44,21 @@ def load(opts):
         dest='parser_dir',
         action='append',
         default=[],
-        help='Location for grabbr parser plugins',
+        help='Location for flayer parser plugins',
     )
     parser.add_argument(
         '--search-dir',
         dest='search_dir',
         action='append',
         default=[],
-        help='Location for grabbr search plugins',
+        help='Location for flayer search plugins',
     )
     parser.add_argument(
         '--organize-dir',
         dest='organize_dir',
         action='append',
         default=[],
-        help='Location for grabbr organizer plugins',
+        help='Location for flayer organizer plugins',
     )
     parser.add_argument(
         '--salt-node',
@@ -73,7 +73,7 @@ def load(opts):
         '--id',
         dest='id',
         action='store',
-        help='The ID of the Grabbr agent to control',
+        help='The ID of the flay agent to control',
     )
     parser.add_argument(
         '--daemon',
@@ -128,7 +128,7 @@ def load(opts):
         dest='force',
         action='store_true',
         default=False,
-        help='Force grabbr to re-download the URL(s)',
+        help='Force flayer to re-download the URL(s)',
     )
     parser.add_argument(
         '-w', '--wait',
@@ -284,7 +284,7 @@ def load(opts):
         '--user-agent',
         dest='user_agent',
         action='store',
-        default='grabbr {}'.format(__version__),
+        default='flay {}'.format(__version__),
         help='User agent to report to the server',
     )
     parser.add_argument(
@@ -444,7 +444,7 @@ def load(opts):
 
     # Override with any environment variables
     for param in set(list(opts) + list(cli_opts)):
-        env_var = 'GRABBR_{}'.format(param.upper())
+        env_var = 'FLAYER_{}'.format(param.upper())
         if env_var in os.environ:
             cli_opts[param] = os.environ[env_var]
 
@@ -453,15 +453,15 @@ def load(opts):
 
     # parser_dir is an array
     if not opts['parser_dir']:
-        opts['parser_dir'] = ['/srv/grabbr/parsers']
+        opts['parser_dir'] = ['/srv/flayer/parsers']
 
     # search_dir is an array
     if not opts['search_dir']:
-        opts['search_dir'] = ['/srv/grabbr/searchers']
+        opts['search_dir'] = ['/srv/flayer/searchers']
 
     # organize_dir is an array
     if not opts['organize_dir']:
-        opts['organize_dir'] = ['/srv/grabbr/organizers']
+        opts['organize_dir'] = ['/srv/flayer/organizers']
 
     # Set up any headers for the agent
     if opts['headers'] is None:
@@ -488,7 +488,7 @@ def load(opts):
         opts['id'] = 'unknown'
 
     if opts.get('run_dir') is None:
-        opts['run_dir'] = os.path.join('/var/run/grabbr', opts['id'])
+        opts['run_dir'] = os.path.join('/var/run/flayer', opts['id'])
 
     opts['pid_file'] = os.path.join(opts['run_dir'], 'pid')
     opts['stop_file'] = os.path.join(opts['run_dir'], 'stop')

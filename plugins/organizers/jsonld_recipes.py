@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Grabbr organizer module for JSON-LD Recipes
+Web Flayer organizer module for JSON-LD Recipes
 
 In order to use this plugin, a ``jsonld_domains`` table needs to be created:
 
@@ -17,14 +17,14 @@ import requests
 from bs4 import BeautifulSoup
 
 # Internal
-import grabbr.tools
+import flayer.tools
 
 
 def organize(url):
     '''
     Decide whether a page has an JSON-LD recipe
     '''
-    out = grabbr.tools.Output(__opts__)
+    out = flayer.tools.Output(__opts__)
     cur = __dbclient__.cursor()
     insert_sql = '''
         INSERT INTO jsonld_domains (domain)
@@ -62,7 +62,7 @@ def organize(url):
                     __dbclient__.commit()
                     if netloc not in __context__['jsonld_domains']:
                         __context__['jsonld_domains'].append(netloc)
-                    grabbr.tools.queue_urls(url, __dbclient__, __opts__)
+                    flayer.tools.queue_urls(url, __dbclient__, __opts__)
                     return 'Queueing for download: {}'.format(url)
             except json.decoder.JSONDecodeError as exc:
                 pass

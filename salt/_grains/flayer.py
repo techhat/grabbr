@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-Salt grains for Grabbr
+Salt grains for Web Flayer
 '''
 # Python
 import os
@@ -19,10 +19,10 @@ def __virtual__():
 
 def process():
     '''
-    Return the IDs of any running Grabbr instances
+    Return the IDs of any running Web Flayer instances
     '''
     ret = {}
-    run_dir = __opts__.get('grabbr_run_dir', '/var/run/grabbr')
+    run_dir = __opts__.get('flayer_run_dir', '/var/run/flayer')
     for agent in os.listdir(run_dir):
         meta_file = os.path.join(run_dir, agent, 'meta')
         if not os.path.exists(meta_file):
@@ -31,4 +31,4 @@ def process():
             meta = json.load(mfh)
             if psutil.Process(meta['pid']).cmdline()[0]:
                 ret[meta['id']] = meta
-    return {'grabbr_agents': ret}
+    return {'flayer_agents': ret}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Web Flayer Daemon
+Documentation=man:flay(1)
+After=network.target
+
+[Service]
+Type=forking
+NotifyAccess=none
+ExecStart=/usr/bin/flay --daemon
+ExecStop=/usr/bin/flay --stop
+
+[Install]
+WantedBy=multi-user.target

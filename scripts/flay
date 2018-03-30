@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+'''
+Run Web Flayer
+'''
+import flayer  # pylint: disable=import-self
+
+flayer.run()  # pylint: disable=c-extension-no-member

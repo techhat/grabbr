@@ -1,22 +1,22 @@
-====================
-Grabbr Configuration
-====================
+=============
+Configuration
+=============
 
 Introduction
 ============
 
-There are multiple ways to configure Grabbr. It is important to understand each
+There are multiple ways to configure Web Flayer. It is important to understand each
 of these methods, before looking at the configuration options themselves.
 
 Configuration File
 ------------------
-The base configuration for Grabbr comes from the configuration file. Normally
-this is located at ``/etc/grabbr/grabbr``, but the location can be changed
+The base configuration for Web Flayer comes from the configuration file. Normally
+this is located at ``/etc/flayer/flayer``, but the location can be changed
 using the ``--config-file`` argument on the command line:
 
 .. code-block:: bash
 
-    grabbr --config-file /path/to/config http://example.com/
+    flay --config-file /path/to/config http://example.com/
 
 This file is in YAML format. A small example file might look like:
 
@@ -24,48 +24,48 @@ This file is in YAML format. A small example file might look like:
 
     id: flay
     dbhost: localhost
-    dbname: grabbr
+    dbname: flayer
     dbuser: postgres
     dbpass: ''
 
 Configuration in this file will override any defaults that are used inside
-Grabbr itself.
+Web Flayer itself.
 
 Environment Variables
 ---------------------
 Environment variables are a popular way to configure programs on a per-user
 basis, without modifying any configuration files. Any option that can be read
 from the command line can be defined as an environment variable, by uppercasing
-the name and prepending it with ``GRABBR_``. For instance, a ``.bash_profile``
+the name and prepending it with ``FLAYER_``. For instance, a ``.bash_profile``
 file would define the above values as:
 
 .. code-block:: bash
 
-    EXPORT GRABBR_ID=flay
-    EXPORT GRABBR_DBHOST=localhost
-    EXPORT GRABBR_DBNAME=grabbr
-    EXPORT GRABBR_DBUSER=postgres
-    EXPORT GRABBR_DBPASS=''
+    EXPORT FLAYER_ID=flay
+    EXPORT FLAYER_DBHOST=localhost
+    EXPORT FLAYER_DBNAME=flayer
+    EXPORT FLAYER_DBUSER=postgres
+    EXPORT FLAYER_DBPASS=''
 
 Environment variables will override any configuration specified in the
 configuration file.
 
 Command Line Options
 --------------------
-Configuration may also be passed into Grabbr from the command line. Any item
+Configuration may also be passed into Web Flayer from the command line. Any item
 that is configured via configuration files or environment variables will be
 overridden if specified from the command line. However, not all command line
 options are used for configuration. Many options are used for run-time only. 
 Configuration options, as well as run-time options, are described below.
 
-In order to make Grabbr as user-friendly as possible, any command line options
-that are analogous to an option in wget will be used, when appropriate. There
-are some options that don't match up. Those, and the reasoning for their
-deviation, are described in the Grabbr vs Wget document.
+In order to make Web Flayer as user-friendly as possible, any command line
+options that are analogous to an option in wget will be used, when appropriate.
+There are some options that don't match up. Those, and the reasoning for their
+deviation, are described in the Web Flayer vs Wget document.
 
 API Configuration
 -----------------
-Grabbr runs a tiny web server, which can be used to set configuration in
+Web Flayer runs a tiny web server, which can be used to set configuration in
 real-time. By default this server runs on port ``42424``, and is bound to
 ``127.0.0.1``. Because there is no security (authentication, HTTPS, etc), it is
 highly recommended that you do _not_ change these settings. However, if you
@@ -81,10 +81,10 @@ via a GET method, and the configuration will be updated.
 
 .. code-block::
 
-    http://localhost:42424/?user_agent=mygrabbr
+    http://localhost:42424/?user_agent=myflayer
 
 The API can also be used to issue a ``stop`` (or ``hard_stop`` or ``abort``)
-command to Grabbr:
+command to Web Flayer:
 
 .. code-block::
 
@@ -99,28 +99,28 @@ And finally, the API can be used to add URLs to the download queue:
 
 Configuration Options
 =====================
-The following options are available for Grabbr.
+The following options are available for Web Flayer.
 
 config_file
 ~~~~~~~~~~~
 CLI Option: ``--config-file``
-Default: ``/etc/grabbr/grabbr``
+Default: ``/etc/flayer/flayer``
 
 Location for the config file.
 
 pid_file
 ~~~~~~~~
 CLI Option: ``--pid-file``
-Default: /var/run/grabbr/pid
+Default: /var/run/flayer/pid
 
 Location for the PID file.
 
 parser_dir
 ~~~~~~~~~~
 CLI Option: ``--parser-dir``
-Default: ``[/srv/grabbr/parsers]``
+Default: ``[/srv/flayer/parsers]``
 
-Location for grabbr parsers.
+Location for flayer parsers.
 
 daemon
 ~~~~~~
@@ -129,43 +129,44 @@ Default: ``False``
 
 Start as a background service.
 
-Stopping Grabbr
----------------
+Stopping Web Flayer
+-------------------
 
 stop
 ~~~~
 CLI Option: ``--stop``
 
-Stop Grabbr after the current download, rather than moving to the next item in
-the queue.
+Stop Web Flayer after the current download, rather than moving to the next item
+in the queue.
 
 hard_stop
 ~~~~~~~~~
 CLI Option: ``--hard-stop``
 
-Stop Grabbr, delete and requeue the current download, then exit.
+Stop Web Flayer, delete and requeue the current download, then exit.
 
 abort
 ~~~~~
 CLI Option: ``--abort``
 
-Stop Grabbr, delete current download, then exit.
+Stop Web Flayer, delete current download, then exit.
 
 stop_file
 ~~~~~~~~~
 CLI Option: ``--stop-file``
-Default: ``/var/run/grabbr/stop``
+Default: ``/var/run/flayer/stop``
 
-Location of the stop file. This file is used by Grabbr as a flag to know that
-a stop has been requested.
+Location of the stop file. This file is used by Web Flayer as a flag to know
+that a stop has been requested.
 
 force
 ~~~~~
 CLI Option: ``-f``, ``--force'``
 Default: ``False``
 
-Force grabbr to re-download the URL(s). Normally URLs that have been processed
-are described in the database, and will not be downloaded again unless forced.
+Force Web Flayer to re-download the URL(s). Normally URLs that have been
+processed are described in the database, and will not be downloaded again
+unless forced.
 
 wait
 ~~~~
@@ -209,7 +210,7 @@ input_file
 ~~~~~~~~~~
 CLI Option: ``-i``, ``--input-file``
 
-A file containing a list of URLs to download. Each line contains one URL.  If
+A file containing a list of URLs to download. Each line contains one URL. If
 ``-`` is specified, then URLs will be read from ``STDIN``.
 
 headers
@@ -372,6 +373,6 @@ Download the URL, using the plugins to process it (default).
 user_agent
 ~~~~~~~~~~
 CLI Option: ``--user-agent``
-Default: ``grabbr``
+Default: ``flayer``
 
 Send this user agent string to the server.

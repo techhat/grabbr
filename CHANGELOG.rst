@@ -1,3 +1,10 @@
+0.6.5
+=====
+* Rename to Web Flayer
+
+Contributors:
+* Joseph Hall
+
 0.6.4
 =====
 Sat Mar 10 2018

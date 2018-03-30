@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
-Grabbr search module for Wikipedia
+Web Flayer search module for Wikipedia
 '''
-import html
-import urllib
 import requests
 from bs4 import BeautifulSoup
-import grabbr.tools
 
 
 def search(opts):
