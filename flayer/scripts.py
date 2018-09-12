@@ -12,6 +12,7 @@ import copy
 import json
 import pprint
 import urllib
+import logging
 
 # 3rd party
 import yaml
@@ -29,6 +30,8 @@ import flayer.event
 import flayer.config
 import flayer.loader
 from flayer.version import __version__
+
+log = logging.getLogger(__name__)
 
 
 def daemonize(opts, context):

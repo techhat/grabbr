@@ -3,5 +3,7 @@
 Run Web Flayer
 '''
 import flayer.scripts
+import flayer.log
 
+flayer.log.setup()
 flayer.scripts.run()  # pylint: disable=c-extension-no-member
