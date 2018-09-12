@@ -2,6 +2,6 @@
 '''
 Run Web Flayer
 '''
-import flayer  # pylint: disable=import-self
+import flayer.scripts
 
-flayer.run()  # pylint: disable=c-extension-no-member
+flayer.scripts.run()  # pylint: disable=c-extension-no-member
