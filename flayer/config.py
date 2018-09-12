@@ -210,7 +210,7 @@ def load(opts):
         action='store',
         default=None,
         nargs='+',
-        help='Reprocess a URL using a postgresql-style regexp',
+        help='Reprocess URLs matching a postgresql-style regexp',
     )
     parser.add_argument(
         '--no-db-cache',
