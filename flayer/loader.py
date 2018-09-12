@@ -32,9 +32,10 @@ def search(opts, dbclient):
     '''
     Load search modules
     '''
+    minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
         opts['search_dir'],
-        {},
+        minion_opts,
         tag=u'flayer/search',
         pack={
             u'__opts__': opts,
@@ -47,9 +48,10 @@ def organize(opts, dbclient, context):
     '''
     Load organizer modules
     '''
+    minion_opts = salt.config.minion_config('/etc/salt/minion')
     return LazyLoader(
         opts['organize_dir'],
-        {},
+        minion_opts,
         tag=u'flayer/organize',
         pack={
             u'__opts__': opts,
