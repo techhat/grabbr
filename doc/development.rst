@@ -201,7 +201,7 @@ search_organize
 ```````````````
 Normally when a search is performed, the results will be returned to the user,
 with no further action taken. However, with a data mining tool, there is a
-good chance that further action is desired. The ``--search-orzanize`` option
+good chance that further action is desired. The ``--search-organize`` option
 provides a map between search results, and the parsers that handle them.
 
 Organizers are explained in detail below.
