@@ -94,7 +94,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         out.info(pprint.pformat(opts))
         return
 
-    if context.get('show_context'):
+    if opts.get('show_context'):
         out.info(pprint.pformat(context))
         return
 

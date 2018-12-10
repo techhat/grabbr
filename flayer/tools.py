@@ -198,6 +198,11 @@ def get_url(
                 content = req.text
                 req_headers = req.headers
         except requests.exceptions.ConnectionError as exc:
+            out.error('Error downloading {}:'.format(url))
+            out.error(exc)
+            return 0, ''
+        except requests.exceptions.InvalidSchema as exc:
+            out.error('Error downloading {}:'.format(url))
             out.error(exc)
             return 0, ''
         if url not in opts['warned']:
@@ -369,60 +374,70 @@ def status(
     flayer.event.fire('flayer/{}/download'.format(opts['id']), {root_url: 'started'}, opts)
     with open(file_name, 'wb') as fhp:
         #old_time = time.time()
-        for block in req.iter_content(buffer_size):
-            if opts.get('hard_stop'):
-                queue_urls([media_url], dbclient, opts)
-                break
-            if opts.get('abort'):
-                break
-            if is_text is True:
-                content += str(block)
-            fhp.write(block)
-            count += buffer_size
-            delay_blocks += buffer_size
-            delay_count += 1
-            #old_time = time.time()
-            time_delay = time.time() - last_time
-            if time_delay >= float(1):
-                last_time = time.time()
-                try:
-                    blocks_left = int((total - count) / buffer_size)
-                except ZeroDivisionError:
-                    blocks_left = 0
-                kbsec = (buffer_size / 1024) * delay_count
-                try:
-                    seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
-                except ZeroDivisionError:
-                    seconds_left = 0
-                minutes_left = int(seconds_left / 60)
-                minsecs_left = seconds_left % 60
-                time_left = '%d:%02d' % (minutes_left, minsecs_left)
-                seconds_elapsed = time.time() - start_time
-                seconds_total = seconds_elapsed + seconds_left
-                minutes_total = int(seconds_total / 60)
-                minsecs_total = int(seconds_total % 60)
-                time_total = '%d:%02d' % (minutes_total, minsecs_total)
-                try:
-                    percent = int(count / point)
-                except ZeroDivisionError:
-                    percent = 0
-                context['dl_data']['bytes_total']   = total  # pylint: disable=bad-whitespace
-                context['dl_data']['bytes_elapsed'] = count  # pylint: disable=bad-whitespace
-                context['dl_data']['time_total']    = time_total  # pylint: disable=bad-whitespace
-                context['dl_data']['time_left']     = time_left  # pylint: disable=bad-whitespace
-                context['dl_data']['kbsec']         = kbsec  # pylint: disable=bad-whitespace
-                if not opts['daemon']:
-                    sys.stdout.write('\x1b[2K\r')
-                    sys.stdout.write(
-                        colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
-                    sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
-                    sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
-                    sys.stdout.write(colored(kbsec, 'cyan'))
-                    sys.stdout.write(colored(' KiB/s, ', 'cyan'))
-                    sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
-                    sys.stdout.flush()
-                delay_blocks = 0
-                delay_count = 0
+        try:
+            for block in req.iter_content(buffer_size):
+                if opts.get('hard_stop'):
+                    queue_urls([media_url], dbclient, opts)
+                    break
+                if opts.get('abort'):
+                    break
+                if is_text is True:
+                    content += str(block)
+                fhp.write(block)
+                count += buffer_size
+                delay_blocks += buffer_size
+                delay_count += 1
+                #old_time = time.time()
+                time_delay = time.time() - last_time
+                if time_delay >= float(1):
+                    last_time = time.time()
+                    try:
+                        blocks_left = int((total - count) / buffer_size)
+                    except ZeroDivisionError:
+                        blocks_left = 0
+                    kbsec = (buffer_size / 1024) * delay_count
+                    try:
+                        seconds_left = ((blocks_left * buffer_size) / 1024) / kbsec
+                    except ZeroDivisionError:
+                        seconds_left = 0
+                    minutes_left = int(seconds_left / 60)
+                    minsecs_left = seconds_left % 60
+                    time_left = '%d:%02d' % (minutes_left, minsecs_left)
+                    seconds_elapsed = time.time() - start_time
+                    seconds_total = seconds_elapsed + seconds_left
+                    minutes_total = int(seconds_total / 60)
+                    minsecs_total = int(seconds_total % 60)
+                    time_total = '%d:%02d' % (minutes_total, minsecs_total)
+                    try:
+                        percent = int(count / point)
+                    except ZeroDivisionError:
+                        percent = 0
+                    context['dl_data']['bytes_total']   = total  # pylint: disable=bad-whitespace
+                    context['dl_data']['bytes_elapsed'] = count  # pylint: disable=bad-whitespace
+                    context['dl_data']['time_total']    = time_total  # pylint: disable=bad-whitespace
+                    context['dl_data']['time_left']     = time_left  # pylint: disable=bad-whitespace
+                    context['dl_data']['kbsec']         = kbsec  # pylint: disable=bad-whitespace
+                    if not opts['daemon']:
+                        sys.stdout.write('\x1b[2K\r')
+                        sys.stdout.write(
+                            colored('Total size is {} '.format(sizeof_fmt(total)), 'green'))
+                        sys.stdout.write(colored('({} bytes), '.format(total), 'green'))
+                        sys.stdout.write(colored('{}%, '.format(str(percent)), 'cyan'))
+                        sys.stdout.write(colored(kbsec, 'cyan'))
+                        sys.stdout.write(colored(' KiB/s, ', 'cyan'))
+                        sys.stdout.write(colored('{}/{} left'.format(time_left, time_total), 'cyan'))
+                        sys.stdout.flush()
+                    delay_blocks = 0
+                    delay_count = 0
+        except OSError as exc:
+            out.error('OS Error: {}'.format(exc))
+            out.error('Media URL: {}'.format(media_url))
+        except ProtocolError as exc:
+            out.error('Protocol Error: {}'.format(exc))
+            out.error('Media URL: {}'.format(media_url))
+        except Exception as exc:
+            out.error('Exception: {}'.format(exc))
+            out.error('Media URL: {}'.format(media_url))
 
     del context['dl_data']
 

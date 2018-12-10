@@ -13,4 +13,4 @@ def setup():
     handler = logging.StreamHandler()
     formatter = logging.BASIC_FORMAT
     handler.setFormatter(formatter)
-    logging.basicConfig(level=os.environ.get("FLAYER_LOGLEVEL", "INFO"))
+    logging.basicConfig(level=os.environ.get('FLAYER_LOGLEVEL', 'INFO'))
