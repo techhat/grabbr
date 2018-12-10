@@ -104,7 +104,13 @@ def get_url(
     wait = 0
     if opts.get('no_db_cache') is True:
         # Skip all the DB stuff and just download the URL
-        req = client.request(opts['method'], url, headers=headers, data=data)
+        req = client.request(
+            opts['method'],
+            url,
+            headers=headers,
+            data=data,
+            verify=bool(opts.get('verify', True)),
+        )
         req.raise_for_status()
         if opts.get('include_headers') is True:
             out.info(pprint.pformat(dict(req.headers)))
@@ -172,10 +178,23 @@ def get_url(
     if cur.rowcount < 1:
         try:
             if opts['save_path']:
-                req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
+                req = client.request(
+                    opts['method'],
+                    url,
+                    headers=headers,
+                    data=data,
+                    verify=bool(opts.get('verify', True)),
+                    stream=True,
+                )
                 content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
             else:
-                req = client.request(opts['method'], url, headers=headers, data=data)
+                req = client.request(
+                    opts['method'],
+                    url,
+                    headers=headers,
+                    data=data,
+                    verify=bool(opts.get('verify', True)),
+                )
                 content = req.text
                 req_headers = req.headers
         except requests.exceptions.ConnectionError as exc:
@@ -203,10 +222,23 @@ def get_url(
         if opts['force'] is True:
             row_id = cur.fetchone()[1]
             if opts['save_path']:
-                req = client.request(opts['method'], url, headers=headers, data=data, stream=True)
+                req = client.request(
+                    opts['method'],
+                    url,
+                    headers=headers,
+                    data=data,
+                    verify=bool(opts.get('verify', True)),
+                    stream=True,
+                )
                 content, req_headers = _save_path(url, url_uuid, req, wait, opts, context, dbclient)
             else:
-                req = client.request(opts['method'], url, headers=headers, data=data)
+                req = client.request(
+                    opts['method'],
+                    url,
+                    headers=headers,
+                    data=data,
+                    verify=bool(opts.get('verify', True)),
+                )
                 content = req.text
                 req_headers = req.headers
             if url not in opts['warned']:

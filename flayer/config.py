@@ -307,6 +307,13 @@ def load(opts):
         nargs='+',
         help='Name of a queued URL to unpause',
     )
+    parser.add_argument(
+        '--verify',
+        dest='verify',
+        action='store',
+        default=True,
+        help='Set to False to ignore SSL errors',
+    )
 
     # Templating
     parser.add_argument(
@@ -462,6 +469,10 @@ def load(opts):
     # organize_dir is an array
     if not opts['organize_dir']:
         opts['organize_dir'] = ['/srv/flayer/organizers']
+
+    # Set the verify argument for requests
+    if opts['verify'] in ('False', False):
+        opts['verify'] = False
 
     # Set up any headers for the agent
     if opts['headers'] is None:
