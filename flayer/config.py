@@ -421,6 +421,12 @@ def load(opts):
         help='List the remaining URLS in the download queue',
     )
     parser.add_argument(
+        '--show-metadata', '--show-url-metadata',
+        dest='show_url_metadata',
+        action='append',
+        help='Show any metadata for the given URL',
+    )
+    parser.add_argument(
         '--show-opts',
         dest='show_opts',
         action='store_true',

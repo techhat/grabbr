@@ -102,6 +102,10 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         flayer.db.list_queue(dbclient, opts)
         return
 
+    if opts.get('show_url_metadata'):
+        flayer.db.get_url_metadata(dbclient, opts)
+        return
+
     if opts.get('pause'):
         flayer.db.pause(dbclient, opts, opts['pause'])
         return

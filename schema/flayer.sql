@@ -3,6 +3,7 @@ CREATE EXTENSION "uuid-ossp";
 CREATE TABLE urls (
     uuid uuid not null default uuid_generate_v4(),
     url text,
+    name text,
     last_retrieved timestamp without time zone DEFAULT now(),
     primary key (uuid)
 );

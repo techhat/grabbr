@@ -227,3 +227,58 @@ def set_domain_wait(dbclient, opts, url):
         ON CONFLICT DO NOTHING
     '''
     cur.execute(sql, [domain, opts['domain_wait']])
+
+
+def get_url_metadata(dbclient, opts):
+    '''
+    This function gets metadata for a URL which may or may not have already
+    been retreived itself.
+    '''
+    out = flayer.tools.Output(opts)
+    cur = dbclient.cursor()
+
+    for url in opts['show_url_metadata']:
+        sql = 'SELECT uuid FROM urls WHERE url ~ %s'
+        cur.execute(sql, (url,))
+
+        uuid = None
+        if cur.rowcount > 0:
+            uuid = cur.fetchone()[0]
+
+        sql = 'SELECT uuid, metadata FROM url_metadata WHERE url = %s'
+        cur.execute(sql, (url,))
+
+        uuidm, metadata = cur.fetchone()
+        if uuid and uuid != uuidm:
+            out.warn('UUID in URLs does not match UUID in metadata')
+            out.warn('{} in URLs'.format(uuid))
+            out.warn('{} in metadata'.format(uuid))
+
+        out.action('URL: {}'.format(url))
+        out.action('UUID: {}'.format(uuid))
+        out.info(pprint.pformat(metadata))
+
+
+def store_url_metadata(dbclient, opts, url, metadata):
+    '''
+    This function stores metadata for a URL which may or may not have already
+    been retreived itself.
+    '''
+    cur = dbclient.cursor()
+
+    sql = 'SELECT uuid FROM urls WHERE url ~ %s'
+    cur.execute(sql, (url,))
+
+    uuid = None
+    data = cur.fetchone()
+    if data:
+        uuid = data[0]
+
+    sql = '''
+        INSERT INTO url_metadata (uuid, url, metadata)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (url) DO UPDATE
+          SET metadata = %s
+    '''
+    cur.execute(sql, (uuid, url, json.dumps(metadata), json.dumps(metadata)))
+    dbclient.commit()
