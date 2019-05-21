@@ -116,7 +116,7 @@ def get_url(
             out.info(pprint.pformat(dict(req.headers)))
         content = req.text
         if opts['random_wait'] is True:
-            wait = opts.get('wait', 10)
+            wait = int(opts.get('wait', 10))
             time.sleep(random.randrange(1, wait))
         if url not in opts['warned']:
             opts['warned'].append(url)
@@ -271,7 +271,7 @@ def get_url(
 
     if exists is False:
         if opts['random_wait'] is True:
-            wait = opts.get('wait', 10)
+            wait = int(opts.get('wait', 10))
             time.sleep(random.randrange(1, wait))
     return url_uuid, content
 
