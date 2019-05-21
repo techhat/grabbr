@@ -131,6 +131,13 @@ def load(opts):
         help='Force flayer to re-download the URL(s)',
     )
     parser.add_argument(
+        '--overwrite',
+        dest='overwrite',
+        action='store_true',
+        default=False,
+        help='Force flayer to overwrite an existing file',
+    )
+    parser.add_argument(
         '-w', '--wait',
         dest='wait',
         action='store',

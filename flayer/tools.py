@@ -341,8 +341,11 @@ def status(
 
     out.action('Downloading: {}'.format(media_url))
     if os.path.exists(file_name):
-        out.warn('... {} exists, skipping'.format(file_name))
-        return None, {}
+        if opts['overwrite']:
+            out.warn('... {} exists, overwriting'.format(file_name))
+        else:
+            out.warn('... {} exists, skipping'.format(file_name))
+            return None, {}
     if not opts['daemon']:
         sys.stdout.write(colored('...Saving to: ', 'green'))
     out.info(file_name)
