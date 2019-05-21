@@ -116,9 +116,9 @@ module_dir
 ``````````
 Optional ``list``, default ``None``.
 
-An alternate location for Web Flayer modules. If this is not specified here, or in
-the ``config_file`` then it will be set to a list containing a single item of
-``/srv/flayer/parsers``. If it is specified here or in the ``config_file``
+An alternate location for Web Flayer modules. If this is not specified here, or
+in the ``config_file`` then it will be set to a list containing a single item of
+``/srv/flayer/plugins/parsers``. If it is specified here or in the ``config_file``
 then that location will not be implicitly included (meaning you need to specify
 it along with your other paths if you want to use it).
 

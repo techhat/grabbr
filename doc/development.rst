@@ -4,7 +4,7 @@ Development
 
 Parsers
 =======
-Parsers are stored in ``/srv/flayer/parsers``. Each parser _must_ have a
+Parsers are stored in ``/srv/flayer/plugins/parsers``. Each parser _must_ have a
 function called ``func_map()`` which examines a URL and returns whether or not
 that module can handle it, and if so, which function to run for it. This
 function might look like:
@@ -135,9 +135,9 @@ one might expect from a program like ``wget``.
 
 Searchers
 =========
-Parsers are stored in ``/srv/flayer/searchers``. Each parser _must_ have a
-function called ``search()`` which queries a search engine (or some other
-platform that has search support) and returns the results.
+Parsers are stored in ``/srv/flayer/plugins/searchers``. Each parser _must_
+have a function called ``search()`` which queries a search engine (or some
+other platform that has search support) and returns the results.
 
 To search, a user would use the ``--search`` flag:
 
@@ -209,10 +209,10 @@ Organizers are explained in detail below.
 
 Organizers
 ==========
-Organizers are stored in ``/srv/flayer/organizers``. The point of an organizer
-is to look at a URL and sort or organize it in some manner. Many times, their
-task is simply to weed out URLs that don't contain desirable data, and then
-add the others to the queue to be downloaded and processed by a parser.
+Organizers are stored in ``/srv/flayer/plugins/organizers``. The point of an
+organizer is to look at a URL and sort or organize it in some manner. Many
+times, their task is simply to weed out URLs that don't contain desirable data,
+and then add the others to the queue to be downloaded and processed by a parser.
 
 For example, the ``jsonld_recipes`` organizer and parser work together, to
 accomplish one job: find and process URLs that contain recipes stored in the

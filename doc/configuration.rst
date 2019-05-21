@@ -118,7 +118,7 @@ Location for the PID file.
 parser_dir
 ~~~~~~~~~~
 CLI Option: ``--parser-dir``
-Default: ``[/srv/flayer/parsers]``
+Default: ``[/srv/flayer/plugins/parsers]``
 
 Location for flayer parsers.
 

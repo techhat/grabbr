@@ -467,15 +467,15 @@ def load(opts):
 
     # parser_dir is an array
     if not opts['parser_dir']:
-        opts['parser_dir'] = ['/srv/flayer/parsers']
+        opts['parser_dir'] = ['/srv/flayer/plugins/parsers']
 
     # search_dir is an array
     if not opts['search_dir']:
-        opts['search_dir'] = ['/srv/flayer/searchers']
+        opts['search_dir'] = ['/srv/flayer/plugins/searchers']
 
     # organize_dir is an array
     if not opts['organize_dir']:
-        opts['organize_dir'] = ['/srv/flayer/organizers']
+        opts['organize_dir'] = ['/srv/flayer/plugins/organizers']
 
     # Set the verify argument for requests
     if opts['verify'] in ('False', False):

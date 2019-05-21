@@ -20,7 +20,7 @@ The following settings are also configurable:
 
     pid_file: /var/run/flayer/pid
     parser_dir:
-      - /srv/flayer/parsers
+      - /srv/flayer/plugins/parsers
     force: False
     random_wait: False
     headers:
