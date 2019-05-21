@@ -7,6 +7,13 @@ CREATE TABLE urls (
     primary key (uuid)
 );
 
+CREATE TABLE url_metadata (
+    uuid uuid,
+    url text,
+    metadata jsonb,
+    primary key (url)
+);
+
 CREATE TABLE content (
     uuid uuid not null default uuid_generate_v4(),
     url_uuid uuid,

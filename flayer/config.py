@@ -21,6 +21,7 @@ def load(opts):
     opts['parser_dir'] = []
     opts['search_dir'] = []
     opts['organize_dir'] = []
+    opts['filter_dir'] = []
 
     parser = argparse.ArgumentParser()
 
@@ -59,6 +60,13 @@ def load(opts):
         action='append',
         default=[],
         help='Location for flayer organizer plugins',
+    )
+    parser.add_argument(
+        '--filter-dir',
+        dest='filter_dir',
+        action='append',
+        default=[],
+        help='Location for flayer filter plugins',
     )
     parser.add_argument(
         '--salt-node',
@@ -455,6 +463,7 @@ def load(opts):
     cli_opts['parser_dir'].extend(opts['parser_dir'])
     cli_opts['search_dir'].extend(opts['search_dir'])
     cli_opts['organize_dir'].extend(opts['organize_dir'])
+    cli_opts['filter_dir'].extend(opts['filter_dir'])
 
     # Override with any environment variables
     for param in set(list(opts) + list(cli_opts)):
@@ -476,6 +485,10 @@ def load(opts):
     # organize_dir is an array
     if not opts['organize_dir']:
         opts['organize_dir'] = ['/srv/flayer/plugins/organizers']
+
+    # filter_dir is an array
+    if not opts['filter_dir']:
+        opts['filter_dir'] = ['/srv/flayer/plugins/filters']
 
     # Set the verify argument for requests
     if opts['verify'] in ('False', False):

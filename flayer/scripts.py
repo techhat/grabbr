@@ -159,6 +159,7 @@ def run(run_opts=None):  # pylint: disable=too-many-return-statements
         return
 
     parsers = flayer.loader.parser(opts, context, urls, dbclient)
+    filters = flayer.loader.filter(opts, context, urls, dbclient)
 
     if opts['reprocess']:
         urls = flayer.tools.reprocess_urls(urls, opts['reprocess'], dbclient)

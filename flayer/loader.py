@@ -59,3 +59,21 @@ def organize(opts, dbclient, context):
             u'__context__': context,
         },
     )
+
+
+def filter(opts, context, urls, dbclient):
+    '''
+    Load filterr modules
+    '''
+    minion_opts = salt.config.minion_config('/etc/salt/minion')
+    return LazyLoader(
+        opts['filter_dir'],
+        minion_opts,
+        tag=u'flayer/filter',
+        pack={
+            u'__opts__': opts,
+            u'__context__': context,
+            u'__urls__': urls,
+            u'__dbclient__': dbclient,
+        },
+    )
