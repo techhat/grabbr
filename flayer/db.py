@@ -86,6 +86,21 @@ def pop_dl_queue(dbclient, urls, opts):
     opts['queue_id'] = url_uuid
 
 
+def update_url_refresh(url_uuid, interval, dbclient, opts):
+    '''
+    List all queued URLs in the database
+    '''
+    ret = []
+    out = flayer.tools.Output(opts)
+
+    cur = dbclient.cursor()
+    cur.execute(
+        'UPDATE urls SET refresh_interval = %s WHERE uuid = %s',
+        [interval, url_uuid],
+    )
+    dbclient.commit()
+
+
 def list_queue(dbclient, opts):
     '''
     List all queued URLs in the database
