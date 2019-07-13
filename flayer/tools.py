@@ -560,6 +560,12 @@ def queue_urls(links, dbclient, opts):
             fields.append('refresh_interval')
             args.append(opts['refresh_interval'])
 
+        if 'overwrite' not in opts:
+            opts['overwrite'] = False
+
+        fields.append('overwrite')
+        args.append(opts['overwrite'])
+
         query = 'INSERT INTO dl_queue ({}) VALUES ({})'.format(
             ', '.join(fields),
             ', '.join(['%s' for arg in range(len(args))])

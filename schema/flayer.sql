@@ -39,6 +39,7 @@ CREATE TABLE dl_queue (
     refresh_interval jsonb,
     primary key (uuid)
     added timestamp default now(),
+    overwrite boolean NOT NULL default FALSE,
 );
 
 CREATE TABLE active_dl (
