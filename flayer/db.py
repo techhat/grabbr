@@ -178,16 +178,22 @@ def pattern_wait(dbclient, url):
     '''
     cur = dbclient.cursor()
 
-    sql = 'SELECT wait FROM pattern_wait WHERE %s ~ pattern LIMIT 1'
+    sql = 'SELECT wait, pattern FROM pattern_wait WHERE %s ~ pattern LIMIT 1'
     cur.execute(sql, [url])
     try:
-        wait = cur.fetchone()[0]
+        row = cur.fetchone()
+        wait = row[0]
+        pattern = row[1]
     except TypeError:
         # No matches
         return
 
-    sql = "UPDATE dl_queue SET paused_until = now() + '%s seconds'"
-    cur.execute(sql, [wait])
+    sql = '''
+        UPDATE dl_queue
+        SET paused_until = now() + '%s seconds'
+        WHERE %s ~ url
+    '''
+    cur.execute(sql, [wait, pattern])
     dbclient.commit()
 
 
